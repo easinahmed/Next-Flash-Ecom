@@ -24,13 +24,13 @@ const getCustomerById = async (req, res) => {
 
 const createCustomer = async (req, res) => {
   try {
-    const { fullName, email, password, phone, address } = req.body;
-    if (!fullName || !email || !password) {
-      return res.status(400).json({ message: 'fullName, email and password are required' });
+    const { fullName, email, phone, address } = req.body;
+    if (!fullName || !email) {
+      return res.status(400).json({ message: 'fullName and email are required' });
     }
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: 'Email already in use' });
-    const user = new User({ fullName, email, password, phone, address, role: 'customer' });
+    const user = new User({ fullName, email, phone, address, role: 'customer' });
     await user.save();
     const toReturn = user.toObject();
     delete toReturn.password;

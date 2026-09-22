@@ -185,7 +185,7 @@ export default function CustomersPage() {
             </thead>
             <tbody>
               {pageItems.map((c) => (
-                <tr key={c._uid} className="border-b border-black/6 last:border-0">
+                <tr key={c._id} className="border-b border-black/6 last:border-0">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-[#12141c] text-white text-xs font-semibold flex items-center justify-center shrink-0">
