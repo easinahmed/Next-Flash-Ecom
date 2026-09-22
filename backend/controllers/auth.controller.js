@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+const { OAuth2Client } = require('google-auth-library');
 
 const registerUser = async (req, res) => {
   try {
@@ -72,29 +73,65 @@ const loginUser = async (req, res) => {
   }
 };
 
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 const googleLogin = async (req, res) => {
   try {
-    const { email, fullName, googleId, avatar } = req.body;
+    const { idToken } = req.body; // the client sends ONLY the Google ID token
 
-    if (!email) {
-      return res.status(400).json({ message: 'Google email is required' });
+    if (!idToken) {
+      return res.status(400).json({ message: 'Google ID token is required' });
     }
 
-    let user = await User.findOne({ email: email.toLowerCase() });
+  
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (verifyErr) {
+      return res.status(401).json({ message: 'Invalid Google token' });
+    }
+
+    if (!payload || !payload.email) {
+      return res.status(401).json({ message: 'Invalid Google token payload' });
+    }
+
+    // Optional but recommended: reject unverified Google emails
+    if (!payload.email_verified) {
+      return res.status(401).json({ message: 'Google email not verified' });
+    }
+
+    const email = payload.email.toLowerCase();
+    const googleId = payload.sub;          // stable, unique Google user ID
+    const fullName = payload.name || email.split('@')[0];
+    const avatar = payload.picture || '';
+
+    let user = await User.findOne({ email });
 
     if (!user) {
       user = await User.create({
-        fullName: fullName || email.split('@')[0],
-        email: email.toLowerCase(),
-        googleId: googleId || '',
-        avatar: avatar || '',
+        fullName,
+        email,
+        googleId,
+        avatar,
         role: 'customer',
       });
     } else {
+      let changed = false;
+
+      // Backfill googleId if this account was created another way
+      if (!user.googleId && googleId) {
+        user.googleId = googleId;
+        changed = true;
+      }
       if (avatar && !user.avatar) {
         user.avatar = avatar;
-        await user.save();
+        changed = true;
       }
+      if (changed) await user.save();
     }
 
     res.json({
@@ -111,6 +148,9 @@ const googleLogin = async (req, res) => {
     res.status(500).json({ message: error.message || 'Google authentication failed' });
   }
 };
+
+
+
 
 const getMe = async (req, res) => {
   try {
