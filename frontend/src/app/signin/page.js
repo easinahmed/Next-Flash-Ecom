@@ -68,7 +68,7 @@ export default function LoginForm() {
          return;
       }
 
-      const result = await loginWithGoogle(idToken);
+      const result = await loginWithGoogle({ idToken });
       setIsLoading(false);
 
       if (result.success) {
