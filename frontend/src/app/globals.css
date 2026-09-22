@@ -1,0 +1,115 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+   themes: light --default, dark --prefersdark;
+ }
+ @custom-variant dark (&:where(.dark, .dark *));
+ 
+ @import '@splidejs/react-splide/css';
+ 
+.container {
+    margin-inline: auto;
+    padding-inline: 24px;
+}
+
+:root {
+    /* CONTAINER */
+    --breakpoint-sm: 40rem;
+    --breakpoint-md: 48rem;
+    --breakpoint-lg: 64rem;
+    --breakpoint-xl: 74.5rem;
+    --breakpoint-2xl: 96rem;
+    /* CONTAINER */
+}
+
+
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  html.dark body {
+    background-color: #000000;
+    color: #ffffff;
+  }
+}
+
+.linethroug {
+  text-decoration: line-through;
+}
+
+.splide__arrow--next {
+    right: 1em;
+    transform: translate(-118px, -130px);
+    -webkit-transform: translate(-118px, -130px);
+    -moz-transform: translate(-118px, -130px);
+    -ms-transform: translate(-118px, -130px);
+    -o-transform: translate(-118px, -130px);
+}
+
+.splide__arrow--prev {
+    left: 1em;
+    transform: translate(1246px, -130px);
+    -webkit-transform: translate(1246px, -130px);
+    -moz-transform: translate(1246px, -130px);
+    -ms-transform: translate(1246px, -130px);
+    -o-transform: translate(1246px, -130px);
+}
+
+@media screen and (max-width: 640px) {
+    .splide__arrow--next {
+       display: none;
+    }
+
+    .splide__arrow--prev {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .splide__arrow--next {
+       display: none;
+    }
+
+    .splide__arrow--prev {
+        display: none;
+    }
+}
+
+.swiper-horizontal .swiper-button-prev {
+  display: none;
+}
+
+.swiper-horizontal .swiper-button-next {
+  display: none;
+}
+
+.splide__pagination {
+  display: none;
+}
+
+.splide__arrow--next {
+    right: 1em;
+    transform: translate(-118px, -130px);
+    display: none;
+}
+
+.splide__arrow--prev {
+    left: 1em;
+    transform: translate(1246px, -130px);
+    display: none;
+}
+
+img {
+    vertical-align: middle;
+    display: inline;
+}
