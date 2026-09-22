@@ -335,11 +335,10 @@ export async function registerUser(userData) {
     body: userData,
   });
 }
-
 export async function googleLogin(googleData) {
   return fetchApi('/auth/google', {
     method: 'POST',
-    body: googleData,
+    body: JSON.stringify(googleData),
   });
 }
 

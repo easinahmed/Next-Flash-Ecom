@@ -5,6 +5,7 @@ import { CartProvider } from "@/components/CartContext";
 import { AuthProvider } from "@/components/AuthContext";
 import LayoutInner from "@/components/LayoutInner";
 import { Toaster } from "react-hot-toast";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,14 +29,16 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <CartProvider>
-          <AuthProvider>
-            <LayoutInner>
-              {children}
-            </LayoutInner>
-          </AuthProvider>
-        </CartProvider>
-        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
+          <CartProvider>
+            <AuthProvider>
+              <LayoutInner>
+                {children}
+              </LayoutInner>
+            </AuthProvider>
+          </CartProvider>
+          <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

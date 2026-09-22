@@ -80,7 +80,7 @@ const loginUser = async (req, res) => {
 
 const googleLogin = async (req, res) => {
   try {
-    const { idToken } = req.body; // the client sends ONLY the Google ID token
+    const { idToken } = req.body;
 
     if (!idToken) {
       return res.status(400).json({ message: 'Google ID token is required' });
