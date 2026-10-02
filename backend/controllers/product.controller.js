@@ -17,7 +17,7 @@ const validateSubcategory = async (categoryName, subcategory) => {
       { name: { $regex: `^${escapeRegex(categoryName)}$`, $options: 'i' } },
       { slug: categoryName },
     ],
-  });
+  }).lean();
   if (!category?.subcategories?.some((name) => name.toLowerCase() === subcategory.trim().toLowerCase())) {
     throw new Error('Subcategory must belong to the selected category');
   }
@@ -105,7 +105,7 @@ const getProducts = async (req, res) => {
           { slug: category },
           { name: { $regex: new RegExp(`^${category.replace(/-/g, '[ -]')}$`, 'i') } }
         ]
-      });
+      }).lean();
 
       const rawNoTime = category.replace(/-\d+$/, '');
       const patterns = [
@@ -172,7 +172,7 @@ const getProducts = async (req, res) => {
       });
     }
 
-    const products = await Product.find(query).sort({ createdAt: -1 });
+    const products = await Product.find(query).sort({ createdAt: -1 }).lean();
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch products' });
@@ -181,7 +181,7 @@ const getProducts = async (req, res) => {
 
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).lean();
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }

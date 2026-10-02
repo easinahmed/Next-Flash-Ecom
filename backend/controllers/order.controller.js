@@ -119,7 +119,8 @@ const getOrders = async (req, res) => {
 
     const orders = await Order.find(filter)
       .populate('customer', 'fullName email phone')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch orders' });

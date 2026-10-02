@@ -2,7 +2,7 @@ const User = require('../models/User');
 
 const getAllCustomers = async (req, res) => {
   try {
-    const users = await User.find({ role: 'customer' }).select('-password');
+    const users = await User.find({ role: 'customer' }).select('-password').lean();
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch customers' });
@@ -11,7 +11,7 @@ const getAllCustomers = async (req, res) => {
 
 const getCustomerById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const user = await User.findById(req.params.id).select('-password').lean();
     if (!user) {
       return res.status(404).json({ message: 'Customer not found' });
     }

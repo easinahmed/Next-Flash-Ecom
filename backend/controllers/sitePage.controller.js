@@ -2,7 +2,7 @@ const SitePage = require('../models/SitePage');
 
 const getSitePages = async (req, res) => {
   try {
-    const pages = await SitePage.find().sort({ slug: 1 });
+    const pages = await SitePage.find().sort({ slug: 1 }).lean();
     res.json(pages);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch site pages' });
@@ -11,7 +11,7 @@ const getSitePages = async (req, res) => {
 
 const getSitePage = async (req, res) => {
   try {
-    const page = await SitePage.findOne({ slug: req.params.slug, isPublished: true });
+    const page = await SitePage.findOne({ slug: req.params.slug, isPublished: true }).lean();
     res.json(page || null);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch site page' });

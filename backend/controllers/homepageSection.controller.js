@@ -6,7 +6,8 @@ const getHomepageSections = async (_req, res) => {
   try {
     const sections = await HomepageSection.find({ isActive: true })
       .populate({ path: 'products', match: { isActive: true } })
-      .sort({ title: 1 });
+      .sort({ title: 1 })
+      .lean();
     res.json(sections);
   } catch (error) {
     console.error('Failed to fetch homepage sections:', error);

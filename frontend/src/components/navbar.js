@@ -67,15 +67,6 @@ export default function Navbar({
   const mobileAccountRef = useRef(null);
   const mobileMoodRef = useRef(null);
 
-  function SectionTitle({ children }) {
-    return (
-      <h2 className="flex items-center gap-2 text-[15px] font-semibold text-gray-800">
-        <span className="h-4 w-[3px] rounded-sm bg-orange-500" />
-        {children}
-      </h2>
-    );
-  }
-
   // ---- theme handling -----------------------------------------------
   useLayoutEffect(() => {
     const html = document.documentElement;
@@ -136,8 +127,10 @@ export default function Navbar({
     setShowSearchSuggestions(false);
   };
 
+  const normalizedSearchQuery = searchQuery.trim();
+
   useEffect(() => {
-    const query = searchQuery.trim();
+    const query = normalizedSearchQuery;
     if (query.length < 2) return undefined;
 
     let isCurrent = true;
@@ -161,7 +154,7 @@ export default function Navbar({
       isCurrent = false;
       window.clearTimeout(timeoutId);
     };
-  }, [searchQuery]);
+  }, [normalizedSearchQuery]);
 
   const renderSearchSuggestions = () => {
     const query = searchQuery.trim();
@@ -366,7 +359,10 @@ export default function Navbar({
 
                         {/* Order review Mobile */}
                         <section className="mt-3 min-h-0 flex-1 overflow-y-auto rounded-xl bg-gray-200 p-3 shadow-sm dark:bg-gray-800 sm:p-2">
-                          <SectionTitle> <span className=' text-black dark:text-white '>Order Review</span></SectionTitle>
+                          <h2 className="flex items-center gap-2 text-[15px] font-semibold text-gray-800">
+                            <span className="h-4 w-[3px] rounded-sm bg-orange-500" />
+                            <span className=' text-black dark:text-white '>Order Review</span>
+                          </h2>
                           <div className="mt-4 divide-y divide-gray-100">
                             {items.map((item) => (
                               <div key={item.id} className="flex flex-wrap items-center gap-3 py-4 first:pt-0 last:pb-0 sm:flex-nowrap sm:gap-4">
@@ -664,7 +660,10 @@ export default function Navbar({
 
                         {/* Order review Dasktop */}
                         <section className="mt-3 min-h-0 flex-1 overflow-y-auto rounded-xl bg-gray-200 p-4 shadow-sm dark:bg-gray-800 sm:p-6">
-                          <SectionTitle> <span className=' text-black dark:text-white '>Order Review</span></SectionTitle>
+                          <h2 className="flex items-center gap-2 text-[15px] font-semibold text-gray-800">
+                            <span className="h-4 w-[3px] rounded-sm bg-orange-500" />
+                            <span className=' text-black dark:text-white '>Order Review</span>
+                          </h2>
                           {/* Product */}
                           <div className="mt-4 divide-y divide-gray-100 ">
                             {items.map((item) => (

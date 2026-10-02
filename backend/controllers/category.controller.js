@@ -63,7 +63,7 @@ const uploadCategoryImage = async (file) => {
 
 const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true }).sort({ createdAt: -1 });
+    const categories = await Category.find({ isActive: true }).sort({ createdAt: -1 }).lean();
     res.json(categories);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch categories' });
@@ -72,7 +72,7 @@ const getCategories = async (req, res) => {
 
 const getCategoryById = async (req, res) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findById(req.params.id).lean();
     if (!category) return res.status(404).json({ message: 'Category not found' });
     res.json(category);
   } catch (error) {

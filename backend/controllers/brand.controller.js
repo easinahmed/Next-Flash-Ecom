@@ -17,7 +17,7 @@ const makeSlug = (name) => name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')
 
 const getBrands = async (req, res) => {
   try {
-    const brands = await Brand.find({ isActive: true }).sort({ name: 1 });
+    const brands = await Brand.find({ isActive: true }).sort({ name: 1 }).lean();
     res.json(brands);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch brands' });

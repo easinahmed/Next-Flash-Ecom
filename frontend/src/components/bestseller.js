@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { Splide, SplideSlide } from '@splidejs/react-splide'
 import { MoveRight } from 'lucide-react'
 import Addtocardbutton from './addtocardbutton'
@@ -72,7 +73,15 @@ const BestSeller = () => {
             <SplideSlide className="cursor-pointer border-1 rounded-3xl border-gray-400/30 min-h-fit shadow-2xs overflow-hidden" key={item.id}>
               <div className="relative rounded-3xl flex flex-col justify-between h-full bg-white dark:bg-gray-800">
                 <ProductLink item={item}>
-                  <img className="w-full h-48 sm:h-56 object-cover rounded-t-3xl" src={item.image} alt={item.name} />
+                  <span className="relative block h-48 w-full sm:h-56">
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 25vw"
+                      className="rounded-t-3xl object-cover"
+                    />
+                  </span>
                 </ProductLink>
                 {item.discountPercentage > 0 && (
                   <span className="absolute top-3 left-3 text-white text-[10px] font-poppins px-3 py-1 font-bold border-1 bg-red-700 rounded-3xl">

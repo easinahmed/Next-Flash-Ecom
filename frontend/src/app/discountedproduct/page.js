@@ -1,5 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Addtocardbutton from '@/components/addtocardbutton'
 import Wishlistheart from '@/components/Wishlistheart'
 import Link from 'next/link'
@@ -74,7 +75,15 @@ export default function DiscountedProductPage() {
             <div className="cursor-pointer border-1 rounded-3xl border-gray-400/20 min-h-fit shadow-2xs overflow-hidden flex flex-col justify-between bg-white dark:bg-gray-800" key={item.id}>
               <div className="relative items-center justify-center rounded-3xl overflow-hidden">
                 <ProductLink item={item}>
-                  <img className="w-full h-48 sm:h-56 object-cover rounded-t-3xl" src={item.image} alt={item.name} />
+                  <span className="relative block h-48 w-full sm:h-56">
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      sizes="(max-width: 767px) calc(50vw - 30px), (max-width: 1023px) calc(33.333vw - 32px), (max-width: 1279px) calc(25vw - 36px), 292px"
+                      className="rounded-t-3xl object-cover"
+                    />
+                  </span>
                 </ProductLink>
                 {item.discountPercentage > 0 && (
                   <span className="absolute top-3 left-3 text-white text-[10px] font-poppins px-3 py-1 font-bold border-1 bg-red-700 rounded-3xl">

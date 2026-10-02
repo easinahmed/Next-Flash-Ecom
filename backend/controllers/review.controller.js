@@ -8,7 +8,7 @@ function isObjectId(value) {
 
 async function findProduct(id) {
   if (!isObjectId(id)) return null;
-  return Product.findById(id).select('name');
+  return Product.findById(id).select('name').lean();
 }
 
 const getProductReviews = async (req, res) => {
@@ -18,7 +18,8 @@ const getProductReviews = async (req, res) => {
 
     const reviews = await Review.find({ product: product._id, status: 'approved' })
       .sort({ createdAt: -1 })
-      .populate('user', 'fullName');
+      .populate('user', 'fullName')
+      .lean();
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch product reviews' });
@@ -61,7 +62,8 @@ const getAllReviews = async (req, res) => {
     const reviews = await Review.find()
       .sort({ createdAt: -1 })
       .populate('product', 'name images')
-      .populate('user', 'fullName email');
+      .populate('user', 'fullName email')
+      .lean();
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch reviews' });
