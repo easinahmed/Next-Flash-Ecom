@@ -10,6 +10,11 @@ import { fetchProducts } from '@/services/dummyjson'
 export default function DiscountedProductPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedGender, setSelectedGender] = useState('')
+
+  const visibleProducts = selectedGender
+    ? products.filter((product) => String(product.gender || '').toLowerCase() === selectedGender)
+    : products
 
   useEffect(() => {
     async function loadDiscountedProducts() {
@@ -39,14 +44,19 @@ export default function DiscountedProductPage() {
           <h2 className="text-lg lg:text-2xl font-bold mb-4 ml-2">Discount 50% or More</h2>
         </div>
 
-        <div className="dropdown dropdown-end">
-          <button tabIndex={0} role="button" className="px-3 py-1 rounded-2xl bg-gray-100 dark:bg-gray-800 border-1 border-orange-500 cursor-pointer text-black dark:text-white m-1 mb-5">ITEM</button>
-          <ul tabIndex={-1} className="dropdown-content menu border-1 bg-gray-300 dark:bg-gray-700 text-black dark:text-white rounded-box z-1 w-52 p-2 shadow-2xl">
-            <li><Link href="/discountedproduct" className="bg-white dark:bg-gray-500 hover:bg-amber-200 dark:hover:bg-gray-600 border-1 border-orange-500">All Products</Link></li>
-            <li><Link href="/manproduct" className="bg-white dark:bg-gray-500 hover:bg-amber-200 dark:hover:bg-gray-600 border-1 mt-1">Men</Link></li>
-            <li><Link href="/womanproduct" className="bg-white dark:bg-gray-500 hover:bg-amber-200 dark:hover:bg-gray-600 border-1 mt-1">Women</Link></li>
-            <li><Link href="/kidsproduct" className="bg-white dark:bg-gray-500 hover:bg-amber-200 dark:hover:bg-gray-600 border-1 mt-1">Kids</Link></li>
-          </ul>
+        <div className="mb-5 flex items-center gap-2">
+          <label htmlFor="discount-gender-filter" className="text-sm font-medium">Filter by</label>
+          <select
+            id="discount-gender-filter"
+            value={selectedGender}
+            onChange={(event) => setSelectedGender(event.target.value)}
+            className="min-w-36 rounded-lg border border-orange-500 bg-gray-100 px-3 py-2 text-sm text-black dark:bg-gray-800 dark:text-white"
+          >
+            <option value="">All Products</option>
+            <option value="men">Men</option>
+            <option value="women">Women</option>
+            <option value="kids">Kids</option>
+          </select>
         </div>
       </div>
 
@@ -56,11 +66,11 @@ export default function DiscountedProductPage() {
             <div key={n} className="h-64 rounded-3xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
           ))}
         </div>
-      ) : products.length === 0 ? (
+      ) : visibleProducts.length === 0 ? (
         <p className="py-12 text-center text-gray-500">No products currently have a discount of 50% or more.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-hidden">
-          {products.map((item) => (
+          {visibleProducts.map((item) => (
             <div className="cursor-pointer border-1 rounded-3xl border-gray-400/20 min-h-fit shadow-2xs overflow-hidden flex flex-col justify-between bg-white dark:bg-gray-800" key={item.id}>
               <div className="relative items-center justify-center rounded-3xl overflow-hidden">
                 <ProductLink item={item}>
