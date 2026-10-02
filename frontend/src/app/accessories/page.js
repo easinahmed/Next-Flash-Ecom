@@ -55,25 +55,27 @@ const AccessoriesPage = () => {
       </div>
 
       <div className="pt-8">
-        {category?.subcategories?.length > 0 && (
-          <div className="mb-5 max-w-xs">
-            <label htmlFor="accessory-subcategory" className="mb-1 block text-sm font-medium">Filter by subcategory</label>
-            <select
-              id="accessory-subcategory"
-              value={selectedSubcategory}
-              onChange={(event) => setSelectedSubcategory(event.target.value)}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:bg-gray-800"
-            >
-              <option value="">All subcategories</option>
-              {category.subcategories.map((subcategory) => (
-                <option key={subcategory} value={subcategory}>{subcategory}</option>
-              ))}
-            </select>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center">
+            <div className="mb-4 h-[20px] w-[20px] rounded-3xl bg-red-700" />
+            <h2 className="mb-4 ml-2 text-lg font-bold lg:text-2xl">{category?.name || 'Accessories'}</h2>
           </div>
-        )}
-        <div className="flex items-center">
-          <div className="h-[20px] w-[20px] bg-red-700 mb-4 rounded-3xl" />
-          <h2 className="text-lg lg:text-2xl font-bold mb-4 ml-2">{category?.name || 'Accessories'}</h2>
+          {category?.subcategories?.length > 0 && (
+            <div className="mb-4 w-full max-w-xs">
+              <label htmlFor="accessory-subcategory" className="mb-1 block text-sm font-medium">Filter by subcategory</label>
+              <select
+                id="accessory-subcategory"
+                value={selectedSubcategory}
+                onChange={(event) => setSelectedSubcategory(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:bg-gray-800"
+              >
+                <option value="">All subcategories</option>
+                {category.subcategories.map((subcategory) => (
+                  <option key={subcategory} value={subcategory}>{subcategory}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {loading ? (
