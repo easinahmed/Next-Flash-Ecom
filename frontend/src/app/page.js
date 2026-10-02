@@ -7,6 +7,7 @@ import Products from '@/components/products'
 import SwiperCarousel from '@/components/slider'
 import WhatsApp from '@/components/whatsapp'
 import Youwant from '@/components/youwant'
+import HomepageCollections from '@/components/HomepageCollections'
 import React from 'react'
 import dynamic from 'next/dynamic'
 
@@ -24,6 +25,7 @@ const page = () => {
       <JustLanded/>
       <Combopack/>
       <Youwant/>
+      <HomepageCollections/>
       <Accessories/>
       <Choosesneakers/>
       <WhatsApp/>

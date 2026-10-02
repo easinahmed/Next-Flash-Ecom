@@ -6,6 +6,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "@/lib/api";
 import { TableSkeleton } from "@/components/Skeletons";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
@@ -66,6 +67,8 @@ export default function CategoriesPage() {
             <thead className="bg-[#f5f4f2] text-[#6b7280] border-b border-black/[0.06]">
               <tr>
                 <th className="px-6 py-4 font-medium">Category</th>
+                <th className="px-6 py-4 font-medium">Navbar section</th>
+                <th className="px-6 py-4 font-medium">Subcategories</th>
                 <th className="px-6 py-4 font-medium">Slug</th>
                 <th className="px-6 py-4 font-medium">Description</th>
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
@@ -83,8 +86,23 @@ export default function CategoriesPage() {
                           <Tag className="w-5 h-5 text-indigo-600" />
                         )}
                       </div>
-                      <span className="font-semibold text-[#1b1d24]">{c.name}</span>
+                      <Link
+                        href={`/categories/${encodeURIComponent(c.slug || c.name)}`}
+                        className="font-semibold text-[#1b1d24] hover:text-indigo-600 hover:underline"
+                      >
+                        {c.name}
+                      </Link>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 text-[#6b7280]">
+                    {{
+                      accessories: "Accessories",
+                      leatherstudio: "Leather Studio",
+                      sneakerstudio: "Sneaker Studio",
+                    }[c.navbarSection] || "—"}
+                  </td>
+                  <td className="px-6 py-4 text-[#6b7280]">
+                    {c.subcategories?.length ? c.subcategories.join(", ") : "—"}
                   </td>
                   <td className="px-6 py-4 text-[#6b7280]">{c.slug}</td>
                   <td className="px-6 py-4 text-[#6b7280] truncate max-w-xs">{c.description || "—"}</td>
@@ -108,7 +126,7 @@ export default function CategoriesPage() {
               ))}
               {categories.length === 0 && (
                 <tr>
-                  <td colSpan="4" className="px-6 py-10 text-center text-[#6b7280]">
+                  <td colSpan="6" className="px-6 py-10 text-center text-[#6b7280]">
                     No categories found. Create one to get started.
                   </td>
                 </tr>
@@ -132,6 +150,9 @@ export default function CategoriesPage() {
 function CategoryModal({ category, onClose, onSave }) {
   const [name, setName] = useState(category?.name || "");
   const [description, setDescription] = useState(category?.description || "");
+  const [navbarSection, setNavbarSection] = useState(category?.navbarSection || "");
+  const [subcategories, setSubcategories] = useState(category?.subcategories || []);
+  const [subcategoryInput, setSubcategoryInput] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(category?.image || "");
   const [saving, setSaving] = useState(false);
@@ -145,6 +166,13 @@ function CategoryModal({ category, onClose, onSave }) {
     }
   };
 
+  const addSubcategory = () => {
+    const value = subcategoryInput.trim();
+    if (!value || subcategories.some((item) => item.toLowerCase() === value.toLowerCase())) return;
+    setSubcategories((current) => [...current, value]);
+    setSubcategoryInput("");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -154,6 +182,8 @@ function CategoryModal({ category, onClose, onSave }) {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("description", description);
+      formData.append("navbarSection", navbarSection);
+      formData.append("subcategories", JSON.stringify(subcategories));
       if (imageFile) {
         formData.append("image", imageFile);
       } else if (category?.image) {
@@ -176,7 +206,7 @@ function CategoryModal({ category, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
+      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <h3 className="font-bold text-gray-900">{category ? "Edit Category" : "Add Category"}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 transition-colors">
@@ -197,6 +227,22 @@ function CategoryModal({ category, onClose, onSave }) {
             />
           </div>
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Navbar section</label>
+            <select
+              value={navbarSection}
+              onChange={(e) => setNavbarSection(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+            >
+              <option value="">Not shown as a navbar category</option>
+              <option value="accessories">Accessories</option>
+              <option value="leatherstudio">Leather Studio</option>
+              <option value="sneakerstudio">Sneaker Studio</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              Each navbar section can be assigned to one main category. Brands and Discount remain dedicated pages.
+            </p>
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Category Image</label>
             {imagePreview && (
               <div className="mb-2 relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200">
@@ -209,6 +255,47 @@ function CategoryModal({ category, onClose, onSave }) {
               onChange={handleImageChange}
               className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Subcategories</label>
+            <div className="flex gap-2">
+              <input
+                value={subcategoryInput}
+                onChange={(e) => setSubcategoryInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addSubcategory();
+                  }
+                }}
+                placeholder="e.g. Wallets"
+                className="min-w-0 flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              />
+              <button
+                type="button"
+                onClick={addSubcategory}
+                disabled={!subcategoryInput.trim()}
+                className="px-4 py-2 text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 rounded-xl"
+              >
+                Add
+              </button>
+            </div>
+            {subcategories.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {subcategories.map((subcategory) => (
+                  <li key={subcategory}>
+                    <button
+                      type="button"
+                      onClick={() => setSubcategories((current) => current.filter((item) => item !== subcategory))}
+                      className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700"
+                      aria-label={`Remove ${subcategory}`}
+                    >
+                      {subcategory} ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>

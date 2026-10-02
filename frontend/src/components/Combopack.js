@@ -6,7 +6,7 @@ import Addtocardbutton from './addtocardbutton'
 import Wishlistheart from './Wishlistheart'
 import ProductLink from './ProductLink'
 import Link from 'next/link'
-import { fetchProducts } from '@/services/dummyjson'
+import { fetchHomepageSectionProducts, fetchProducts } from '@/services/dummyjson'
 
 const Combopack = () => {
   const [items, setItems] = useState([])
@@ -15,8 +15,13 @@ const Combopack = () => {
   useEffect(() => {
     async function loadComboDeals() {
       try {
-        const data = await fetchProducts({ limit: 8, skip: 5 })
-        setItems(data.products || [])
+        const configuredProducts = await fetchHomepageSectionProducts('exclusive-combo-deals')
+        if (configuredProducts) {
+          setItems(configuredProducts)
+        } else {
+          const data = await fetchProducts({ limit: 8, comboDeal: true, category: 'Exclusive Combo Deals' })
+          setItems(data.products || [])
+        }
       } catch (err) {
         console.error('Failed to load combo deals:', err)
       } finally {
@@ -55,10 +60,11 @@ const Combopack = () => {
             ))}
           </div>
         ) : items.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">No combo deals available.</p>
+          <p className="py-8 text-center text-gray-500">No combo deals available.</p>
         ) : (
           <Splide options={{
-            type: 'loop',
+              type: 'slide',
+              rewind: true,
             perPage: 4,
             perMove: 1,
             gap: '1rem',

@@ -10,6 +10,7 @@ import { fetchCategories, fetchProducts, fetchProductsByCategory } from '@/servi
 
 const ShopNowPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedSubcategory, setSelectedSubcategory] = useState('')
   const [categories, setCategories] = useState([])
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -21,11 +22,13 @@ const ShopNowPage = () => {
   useEffect(() => {
     let active = true
     const request = selectedCategory === 'all'
-      ? fetchProducts({ limit: 100 })
-      : fetchProductsByCategory(selectedCategory, { limit: 100 })
+      ? fetchProducts({ limit: 100, subcategory: selectedSubcategory })
+      : fetchProductsByCategory(selectedCategory, { limit: 100, subcategory: selectedSubcategory })
     request.then((data) => { if (active) setItems(data.products || []) }).catch(console.error).finally(() => active && setLoading(false))
     return () => { active = false }
-  }, [selectedCategory])
+  }, [selectedCategory, selectedSubcategory])
+
+  const activeCategory = categories.find((category) => (category.slug || category.name) === selectedCategory)
 
   return (
     <div className="container mx-auto px-4 py-4">
@@ -37,8 +40,32 @@ const ShopNowPage = () => {
       </div>
 
       <div>
-        <Shopcategories selectedCategory={selectedCategory} categories={categories} onCategoryChange={setSelectedCategory} />
+        <Shopcategories
+          selectedCategory={selectedCategory}
+          categories={categories}
+          onCategoryChange={(category) => {
+            setSelectedCategory(category)
+            setSelectedSubcategory('')
+          }}
+        />
       </div>
+
+      {activeCategory?.subcategories?.length > 0 && (
+        <div className="mb-5 max-w-xs">
+          <label htmlFor="shop-subcategory" className="mb-1 block text-sm font-medium">Filter by subcategory</label>
+          <select
+            id="shop-subcategory"
+            value={selectedSubcategory}
+            onChange={(event) => setSelectedSubcategory(event.target.value)}
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:bg-gray-800"
+          >
+            <option value="">All subcategories</option>
+            {activeCategory.subcategories.map((subcategory) => (
+              <option key={subcategory} value={subcategory}>{subcategory}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="container flex items-center justify-between ">
 

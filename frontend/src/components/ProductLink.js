@@ -14,8 +14,8 @@ export function getProductHref(item) {
   return `/product?${params.toString()}`
 }
 
-const ProductLink = ({ item, children, className = '' }) => (
-  <Link href={getProductHref(item)} className={className}>
+const ProductLink = ({ item, children, className = '', onClick }) => (
+  <Link href={getProductHref(item)} className={className} onClick={onClick}>
     {children}
   </Link>
 )

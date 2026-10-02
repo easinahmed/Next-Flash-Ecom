@@ -113,6 +113,7 @@ export default function CmsPage() {
       <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-[#161623]">
         <div className="mb-4"><h2 className="text-lg font-bold text-gray-900 dark:text-white">Content editors</h2><p className="mt-1 text-sm text-gray-500">Open an individual page to edit its labeled sections.</p></div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Link href="/homepage-sections" className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm font-bold text-indigo-700 hover:bg-indigo-100">Homepage sections</Link>
           <Link href="/cms/banners" className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm font-bold text-indigo-700 hover:bg-indigo-100">Hero banners</Link>
           {pageOptions.map(([slug, label]) => <Link key={slug} href={`/cms/${slug}`} className="rounded-xl border border-gray-200 p-4 text-sm font-semibold text-gray-700 hover:border-indigo-300 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">{label}</Link>)}
         </div>

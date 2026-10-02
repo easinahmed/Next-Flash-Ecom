@@ -13,7 +13,7 @@ export default function ComboDealsPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const data = await fetchProducts({ limit: 30, skip: 10 })
+        const data = await fetchProducts({ limit: 100, comboDeal: true, category: 'Exclusive Combo Deals' })
         setProducts(data.products || [])
       } catch (err) {
         console.error('Failed to load combo deals:', err)
@@ -44,6 +44,8 @@ export default function ComboDealsPage() {
               <div key={n} className="h-64 rounded-3xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
             ))}
           </div>
+        ) : products.length === 0 ? (
+          <p className="py-12 text-center text-gray-500">No combo deals are available right now.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4 overflow-hidden">
             {products.map((item) => (

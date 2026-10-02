@@ -14,7 +14,7 @@ export default function DiscountedProductPage() {
   useEffect(() => {
     async function loadDiscountedProducts() {
       try {
-        const data = await fetchProducts({ limit: 100, skip: 0, discounted: true })
+        const data = await fetchProducts({ limit: 100, skip: 0, discounted: true, minDiscount: 50 })
         setProducts(data.products || [])
       } catch (err) {
         console.error('Failed to load discounted products:', err)
@@ -30,13 +30,13 @@ export default function DiscountedProductPage() {
       <div className="flex items-center justify-start gap-2 mb-7">
         <Link href="/"><p className="text-sm cursor-pointer hover:underline">Home</p></Link>
         <p className="text-sm">/</p>
-        <p className="text-sm text-green-700 font-medium">Discounted Products</p>
+        <p className="text-sm text-green-700 font-medium">Discount 50%</p>
       </div>
 
       <div className="container flex items-center justify-between">
         <div className="flex items-center justify-center">
           <div className="h-[20px] w-[20px] bg-red-700 mb-4 rounded-3xl" />
-          <h2 className="text-lg lg:text-2xl font-bold mb-4 ml-2">Your Discounted Products</h2>
+          <h2 className="text-lg lg:text-2xl font-bold mb-4 ml-2">Discount 50% or More</h2>
         </div>
 
         <div className="dropdown dropdown-end">
@@ -56,6 +56,8 @@ export default function DiscountedProductPage() {
             <div key={n} className="h-64 rounded-3xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
           ))}
         </div>
+      ) : products.length === 0 ? (
+        <p className="py-12 text-center text-gray-500">No products currently have a discount of 50% or more.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-hidden">
           {products.map((item) => (

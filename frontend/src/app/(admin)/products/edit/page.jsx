@@ -21,7 +21,11 @@ function EditProductForm() {
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
+  const [subcategory, setSubcategory] = useState("");
+  const [descriptionEnglish, setDescriptionEnglish] = useState("");
+  const [descriptionBengali, setDescriptionBengali] = useState("");
+  const [fullDescriptionEnglish, setFullDescriptionEnglish] = useState("");
+  const [fullDescriptionBengali, setFullDescriptionBengali] = useState("");
   const [price, setPrice] = useState("");
   const [originalPrice, setOriginalPrice] = useState("");
   const [stock, setStock] = useState(0);
@@ -54,7 +58,11 @@ function EditProductForm() {
         setBrands(brandData || []);
         setName(product.name || product.title || "");
         setCategory(product.category || "");
-        setDescription(product.description || "");
+        setSubcategory(product.subcategory || "");
+        setDescriptionEnglish(product.descriptionEnglish || product.description || "");
+        setDescriptionBengali(product.descriptionBengali || "");
+        setFullDescriptionEnglish(product.fullDescriptionEnglish || product.descriptionEnglish || product.description || "");
+        setFullDescriptionBengali(product.fullDescriptionBengali || "");
         setPrice(String(product.price || ""));
         setOriginalPrice(String(product.originalPrice || ""));
         setStock(product.stock || 0);
@@ -116,7 +124,12 @@ function EditProductForm() {
       const payload = {
         name: name.trim(),
         category,
-        description: description.trim(),
+        subcategory,
+        description: descriptionEnglish.trim(),
+        descriptionEnglish: descriptionEnglish.trim(),
+        descriptionBengali: descriptionBengali.trim(),
+        fullDescriptionEnglish: fullDescriptionEnglish.trim(),
+        fullDescriptionBengali: fullDescriptionBengali.trim(),
         price: Number(price),
         originalPrice: Number(originalPrice) || 0,
         stock: Number(stock),
@@ -209,21 +222,36 @@ function EditProductForm() {
                 className="w-full border border-black/10 rounded-lg px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828] transition-colors"
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-[#6b7280] mb-1.5">Description</label>
-              <textarea
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full border border-black/10 rounded-lg px-3 py-2.5 text-sm text-[#1b1d24] outline-none resize-none focus:border-[#d62828] transition-colors"
-              />
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-[#1b1d24]">Product descriptions</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-xs font-medium text-[#6b7280]">
+                  Short Description (English)
+                  <textarea rows={3} value={descriptionEnglish} onChange={(e) => setDescriptionEnglish(e.target.value)} className="mt-1.5 w-full resize-y rounded-lg border border-black/10 px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828]" />
+                </label>
+                <label className="block text-xs font-medium text-[#6b7280]">
+                  Short Description (বাংলা)
+                  <textarea rows={3} value={descriptionBengali} onChange={(e) => setDescriptionBengali(e.target.value)} className="mt-1.5 w-full resize-y rounded-lg border border-black/10 px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828]" />
+                </label>
+                <label className="block text-xs font-medium text-[#6b7280]">
+                  Full Description (English)
+                  <textarea rows={6} value={fullDescriptionEnglish} onChange={(e) => setFullDescriptionEnglish(e.target.value)} className="mt-1.5 w-full resize-y rounded-lg border border-black/10 px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828]" />
+                </label>
+                <label className="block text-xs font-medium text-[#6b7280]">
+                  Full Description (বাংলা)
+                  <textarea rows={6} value={fullDescriptionBengali} onChange={(e) => setFullDescriptionBengali(e.target.value)} className="mt-1.5 w-full resize-y rounded-lg border border-black/10 px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828]" />
+                </label>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-[#6b7280] mb-1.5">Category</label>
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    setSubcategory("");
+                  }}
                   className="w-full border border-black/10 rounded-lg px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828] transition-colors"
                 >
                   <option value="">Select Category</option>
@@ -231,6 +259,20 @@ function EditProductForm() {
                     <option key={cat._id || cat.name} value={cat.name}>
                       {cat.name}
                     </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#6b7280] mb-1.5">Subcategory</label>
+                <select
+                  value={subcategory}
+                  onChange={(e) => setSubcategory(e.target.value)}
+                  disabled={!categories.find((item) => item.name === category)?.subcategories?.length}
+                  className="w-full border border-black/10 rounded-lg px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828] transition-colors disabled:bg-gray-100"
+                >
+                  <option value="">Select subcategory</option>
+                  {(categories.find((item) => item.name === category)?.subcategories || []).map((item) => (
+                    <option key={item} value={item}>{item}</option>
                   ))}
                 </select>
               </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { Star } from 'lucide-react';
@@ -10,14 +11,16 @@ import { fetchProductById } from '@/services/dummyjson';
 
 export default function DynamicProductPage({ params }) {
   const resolvedParams = use(params);
+  const router = useRouter();
   const productId = resolvedParams.id;
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { addToStoppingCart } = useCart();
+  const { addToStoppingCart, startBuyNowCheckout } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [descriptionLanguage, setDescriptionLanguage] = useState('english');
 
   useEffect(() => {
     let isMounted = true;
@@ -66,7 +69,7 @@ export default function DynamicProductPage({ params }) {
   };
 
   const handleBuyNow = () => {
-    addToStoppingCart({
+    startBuyNowCheckout({
       id: product.id,
       name: product.name,
       image: product.image,
@@ -75,10 +78,17 @@ export default function DynamicProductPage({ params }) {
       color: selectedColor,
       size: selectedSize,
     });
-    window.location.href = '/cart';
+    router.push('/cart?buyNow=true');
   };
 
   const images = product.images && product.images.length > 0 ? product.images : [product.image];
+  const shortDescription = descriptionLanguage === 'bengali'
+    ? product.descriptionBengali
+    : product.descriptionEnglish || product.description;
+  const fullDescription = descriptionLanguage === 'bengali'
+    ? product.fullDescriptionBengali
+    : product.fullDescriptionEnglish || product.descriptionEnglish || product.description;
+  const hasFullDescription = Boolean(product.fullDescriptionEnglish || product.fullDescriptionBengali || product.descriptionEnglish || product.description);
 
   return (
     <main className="min-h-screen bg-white dark:bg-black">
@@ -123,7 +133,16 @@ export default function DynamicProductPage({ params }) {
                 )}
               </div>
 
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{product.description}</p>
+              <div className="mt-2">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Product Description</h2>
+                  <select value={descriptionLanguage} onChange={(event) => setDescriptionLanguage(event.target.value)} aria-label="Select product description language" className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200">
+                    <option value="english">English</option>
+                    <option value="bengali">বাংলা</option>
+                  </select>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{shortDescription || 'No description available in this language.'}</p>
+              </div>
 
               {/* Color variants */}
               {product.colors && product.colors.length > 0 && (
@@ -221,7 +240,16 @@ export default function DynamicProductPage({ params }) {
         </div>
       </div>
 
-      <Saggation category={product.category} />
+      {hasFullDescription && (
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 sm:p-8 dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-amber-200">Full Description</h2>
+            <p className="whitespace-pre-line text-sm leading-7 text-gray-600 dark:text-gray-300">{fullDescription || 'No full description is available in this language.'}</p>
+          </section>
+        </div>
+      )}
+
+      <Saggation category={product.category} excludeProductId={product.id} />
     </main>
   );
 }

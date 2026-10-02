@@ -15,6 +15,7 @@ const brandRoutes = require('./routes/brand.routes');
 const courierRoutes = require('./routes/courier.routes');
 const reviewRoutes = require('./routes/review.routes');
 const sitePageRoutes = require('./routes/sitePage.routes');
+const homepageSectionRoutes = require('./routes/homepageSection.routes');
 const seedDB = require('./utils/seedDB');
 
 dotenv.config();
@@ -81,6 +82,7 @@ app.use('/api/hero', heroRoutes);
 app.use('/api/courier', courierRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/site-pages', sitePageRoutes);
+app.use('/api/homepage-sections', homepageSectionRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });

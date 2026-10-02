@@ -12,6 +12,7 @@ export default function CategoryPage({ params }) {
   const slug = resolvedParams.slug;
   const [products, setProducts] = useState([]);
   const [categoryInfo, setCategoryInfo] = useState(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function CategoryPage({ params }) {
         const categoryQuery = decodeURIComponent(slug);
 
         const [data, categoriesList] = await Promise.all([
-          getProducts({ category: categoryQuery }),
+          getProducts({ category: categoryQuery, ...(selectedSubcategory ? { subcategory: selectedSubcategory } : {}) }),
           getCategories(),
         ]);
 
@@ -63,7 +64,7 @@ export default function CategoryPage({ params }) {
     }
     loadCategoryData();
     return () => { isMounted = false; };
-  }, [slug]);
+  }, [slug, selectedSubcategory]);
 
   const readableTitle = categoryInfo?.name || (slug
     ? decodeURIComponent(slug).replace(/-\d+$/, '').replace(/-/g, ' ').toUpperCase()
@@ -97,6 +98,23 @@ export default function CategoryPage({ params }) {
             )}
           </div>
         </div>
+
+        {categoryInfo?.subcategories?.length > 0 && (
+          <div className="mb-5 max-w-xs">
+            <label htmlFor="category-subcategory" className="mb-1 block text-sm font-medium">Filter by subcategory</label>
+            <select
+              id="category-subcategory"
+              value={selectedSubcategory}
+              onChange={(event) => setSelectedSubcategory(event.target.value)}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:bg-gray-800"
+            >
+              <option value="">All subcategories</option>
+              {categoryInfo.subcategories.map((subcategory) => (
+                <option key={subcategory} value={subcategory}>{subcategory}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4">

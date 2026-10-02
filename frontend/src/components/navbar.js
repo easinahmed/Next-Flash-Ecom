@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useCart } from './CartContext';
+import ProductLink from './ProductLink';
+import { searchProducts } from '@/services/dummyjson';
 
 export default function Navbar({
   currentUser = null,
@@ -43,6 +45,9 @@ export default function Navbar({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchError, setSearchError] = useState('');
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [suggestionsForQuery, setSuggestionsForQuery] = useState('');
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [isThemeLoaded, setIsThemeLoaded] = useState(false);
   const {
@@ -128,6 +133,70 @@ export default function Navbar({
     router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     setSearchQuery('');
     setIsSearchOpen(false);
+    setShowSearchSuggestions(false);
+  };
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (query.length < 2) return undefined;
+
+    let isCurrent = true;
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const results = await searchProducts(query, { limit: 6 });
+        if (isCurrent) {
+          setSearchSuggestions(results.products || []);
+          setSuggestionsForQuery(query);
+        }
+      } catch (error) {
+        console.error('Failed to load search suggestions:', error);
+        if (isCurrent) {
+          setSearchSuggestions([]);
+          setSuggestionsForQuery(query);
+        }
+      }
+    }, 250);
+
+    return () => {
+      isCurrent = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchQuery]);
+
+  const renderSearchSuggestions = () => {
+    const query = searchQuery.trim();
+    if (!showSearchSuggestions || query.length < 2 || suggestionsForQuery !== query) return null;
+
+    return (
+      <div className="absolute left-0 right-0 top-full z-[70] mt-2 max-h-[min(70vh,28rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+        {searchSuggestions.length > 0 ? searchSuggestions.map((product) => (
+            <ProductLink
+              key={product.id}
+              item={product}
+              onClick={() => {
+                setShowSearchSuggestions(false);
+                setIsSearchOpen(false);
+              }}
+              className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100 dark:bg-gray-800">
+                <Image src={product.image} alt="" fill sizes="48px" className="object-cover" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-gray-900 dark:text-white">{product.name}</span>
+                <span className="mt-0.5 block truncate text-xs text-gray-500 dark:text-gray-400">
+                  {[product.brand, product.category, product.subcategory].filter(Boolean).join(' · ')}
+                </span>
+              </span>
+              <span className="shrink-0 text-sm font-semibold text-red-600">৳{Number(product.price || 0).toLocaleString()}</span>
+            </ProductLink>
+          )) : (
+            <p className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+              No matching products. Press Enter to view search results.
+            </p>
+          )}
+      </div>
+    );
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
@@ -168,26 +237,19 @@ export default function Navbar({
       setIsMobileMenuOpen(false);
       setAccountMenuOpen(false);
       setMobileAccountOpen(false);
-      router.push('/auth/login');
+      router.push('/signin');
     } catch (error) {
       console.error('Logout failed:', error);
     }
   };
 
-  const [categories, setCategories] = useState([]);
-  
-  useEffect(() => {
-    import('@/lib/api').then(({ getCategories }) => {
-      getCategories().then(setCategories).catch(console.error);
-    });
-  }, []);
-
-  const dynamicNavLinks = [
+  const navLinks = [
     { href: '/', label: 'Home' },
-    ...categories.map(c => ({ href: `/category/${c.slug || c.name.toLowerCase().replace(/\\s+/g, '-')}`, label: c.name })),
     { href: '/brands', label: 'Brands' },
-    { href: '/discountedproduct', label: 'Discounts' },
-    ...(currentUser ? [] : [{ href: '/signin', label: 'Sign In' }]),
+    { href: '/discountedproduct', label: 'Discount 50%' },
+    { href: '/leatherstudio', label: 'Leather Studio' },
+    { href: '/sneakerstudio', label: 'Sneaker Studio' },
+    { href: '/accessories', label: 'Accessories' },
   ];
 
   const isActive = (href) => (href === '/' ? pathname === '/' : pathname?.startsWith(href));
@@ -493,7 +555,7 @@ export default function Navbar({
                 </div>
 
                 <ul className="menu w-full space-y-2">
-                  {dynamicNavLinks.map((link) => (
+                  {navLinks.map((link) => (
                     <li key={link.href}>
                       <Link
                         href={link.href}
@@ -550,7 +612,9 @@ export default function Navbar({
                   onChange={(event) => {
                     setSearchQuery(event.target.value);
                     setSearchError('');
+                    setShowSearchSuggestions(true);
                   }}
+                  onFocus={() => setShowSearchSuggestions(true)}
                   placeholder="What are you looking for?"
                   className="w-56 rounded-lg border border-gray-300 py-2 pl-4 pr-10 text-sm focus:border-black dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 />
@@ -561,6 +625,7 @@ export default function Navbar({
                 >
                   <Search size={20} className={themeIcon} />
                 </button>
+                {renderSearchSuggestions()}
               </form>
 
               <div className="flex items-center gap-4">
@@ -738,7 +803,7 @@ export default function Navbar({
           <div className="border-b border-white bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900 lg:hidden">
             <div className="container mx-auto px-4 py-6">
               <div className="mx-auto max-w-2xl">
-                <form onSubmit={handleSearch}>
+                <form onSubmit={handleSearch} className="relative">
                   <div className="relative">
                     <input
                       type="search"
@@ -749,7 +814,9 @@ export default function Navbar({
                       onChange={(event) => {
                         setSearchQuery(event.target.value);
                         setSearchError('');
+                        setShowSearchSuggestions(true);
                       }}
+                      onFocus={() => setShowSearchSuggestions(true)}
                     />
                     <button
                       type="submit"
@@ -764,6 +831,7 @@ export default function Navbar({
                       {searchError}
                     </p>
                   )}
+                  {renderSearchSuggestions()}
                 </form>
 
               </div>
@@ -774,7 +842,7 @@ export default function Navbar({
         <div className={`hidden lg:block py-[15px] ${isDark ? 'bg-slate-800' : 'bg-gray-300'}`}>
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-center gap-10">
-              {dynamicNavLinks.map((link) => (
+              {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

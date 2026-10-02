@@ -35,11 +35,8 @@ const JustLanded = () => {
       setLoading(true)
       try {
         const data = await fetchProductsByCategory(selectedCategory, { limit: 10, justLanded: true })
-        const products = data.products?.length
-          ? data.products
-          : (await fetchProductsByCategory(selectedCategory, { limit: 10 })).products || []
         if (isMounted) {
-          setItems(products)
+          setItems(data.products || [])
         }
       } catch (err) {
         console.error('Failed to fetch JustLanded products:', err)
@@ -98,7 +95,8 @@ const JustLanded = () => {
         <p className="text-center text-gray-500 py-8">No products found in this category.</p>
       ) : (
         <Splide options={{
-          type: 'loop',
+          type: 'slide',
+          rewind: true,
           perPage: 4,
           perMove: 1,
           gap: '1rem',

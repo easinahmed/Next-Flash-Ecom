@@ -27,9 +27,13 @@ export default function ProductFormPage() {
   
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
+  const [subcategory, setSubcategory] = useState("");
   const [brand, setBrand] = useState("");
   const [gender, setGender] = useState("");
-  const [description, setDescription] = useState("");
+  const [descriptionEnglish, setDescriptionEnglish] = useState("");
+  const [descriptionBengali, setDescriptionBengali] = useState("");
+  const [fullDescriptionEnglish, setFullDescriptionEnglish] = useState("");
+  const [fullDescriptionBengali, setFullDescriptionBengali] = useState("");
   const [price, setPrice] = useState("");
   const [originalPrice, setOriginalPrice] = useState("");
   const [images, setImages] = useState([]); // { file: File, preview: string }
@@ -115,9 +119,14 @@ export default function ProductFormPage() {
         name,
         title: name,
         category,
+        subcategory,
         brand,
         gender,
-        description,
+        description: descriptionEnglish,
+        descriptionEnglish,
+        descriptionBengali,
+        fullDescriptionEnglish,
+        fullDescriptionBengali,
         price: Number(price),
         originalPrice: Number(originalPrice) || 0,
       };
@@ -196,11 +205,28 @@ export default function ProductFormPage() {
                   <label className="block text-xs font-medium text-[#6b7280] mb-1.5">Category</label>
                   <select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={(e) => {
+                      setCategory(e.target.value);
+                      setSubcategory("");
+                    }}
                     className="w-full border border-black/10 rounded-lg px-3 py-2.5 text-sm text-[#1b1d24] outline-none"
                   >
                     {categories.map((c) => (
                       <option key={c.name} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#6b7280] mb-1.5">Subcategory</label>
+                  <select
+                    value={subcategory}
+                    onChange={(e) => setSubcategory(e.target.value)}
+                    disabled={!categories.find((item) => item.name === category)?.subcategories?.length}
+                    className="w-full border border-black/10 rounded-lg px-3 py-2.5 text-sm text-[#1b1d24] outline-none disabled:bg-gray-100"
+                  >
+                    <option value="">Select subcategory</option>
+                    {(categories.find((item) => item.name === category)?.subcategories || []).map((item) => (
+                      <option key={item} value={item}>{item}</option>
                     ))}
                   </select>
                 </div>
@@ -246,15 +272,26 @@ export default function ProductFormPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-[#6b7280] mb-1.5">Description</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  placeholder="Describe the material, fit, and care instructions…"
-                  className="w-full border border-black/10 rounded-lg px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828] resize-none"
-                />
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-[#1b1d24]">Product descriptions</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block text-xs font-medium text-[#6b7280]">
+                    Short Description (English)
+                    <textarea value={descriptionEnglish} onChange={(e) => setDescriptionEnglish(e.target.value)} rows={3} placeholder="A brief product summary" className="mt-1.5 w-full resize-y rounded-lg border border-black/10 px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828]" />
+                  </label>
+                  <label className="block text-xs font-medium text-[#6b7280]">
+                    Short Description (বাংলা)
+                    <textarea value={descriptionBengali} onChange={(e) => setDescriptionBengali(e.target.value)} rows={3} placeholder="পণ্যের সংক্ষিপ্ত বিবরণ" className="mt-1.5 w-full resize-y rounded-lg border border-black/10 px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828]" />
+                  </label>
+                  <label className="block text-xs font-medium text-[#6b7280]">
+                    Full Description (English)
+                    <textarea value={fullDescriptionEnglish} onChange={(e) => setFullDescriptionEnglish(e.target.value)} rows={6} placeholder="Detailed product information" className="mt-1.5 w-full resize-y rounded-lg border border-black/10 px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828]" />
+                  </label>
+                  <label className="block text-xs font-medium text-[#6b7280]">
+                    Full Description (বাংলা)
+                    <textarea value={fullDescriptionBengali} onChange={(e) => setFullDescriptionBengali(e.target.value)} rows={6} placeholder="পণ্যের বিস্তারিত বিবরণ" className="mt-1.5 w-full resize-y rounded-lg border border-black/10 px-3 py-2.5 text-sm text-[#1b1d24] outline-none focus:border-[#d62828]" />
+                  </label>
+                </div>
               </div>
             </div>
 

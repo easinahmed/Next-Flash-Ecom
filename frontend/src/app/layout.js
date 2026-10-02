@@ -27,7 +27,23 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try {
+              const savedTheme = localStorage.getItem('theme');
+              const theme = savedTheme === 'dark' ? 'dark' : 'light';
+              document.documentElement.classList.remove('light', 'dark');
+              document.documentElement.classList.add(theme);
+              document.documentElement.style.colorScheme = theme;
+            } catch (error) {
+              document.documentElement.classList.add('light');
+            }`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
           <CartProvider>

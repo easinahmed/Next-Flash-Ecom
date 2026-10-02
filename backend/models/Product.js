@@ -16,9 +16,30 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    descriptionEnglish: {
+      type: String,
+      default: '',
+    },
+    descriptionBengali: {
+      type: String,
+      default: '',
+    },
+    fullDescriptionEnglish: {
+      type: String,
+      default: '',
+    },
+    fullDescriptionBengali: {
+      type: String,
+      default: '',
+    },
     category: {
       type: String,
       required: true,
+    },
+    subcategory: {
+      type: String,
+      default: '',
+      trim: true,
     },
     gender: {
       type: String,
@@ -67,6 +88,10 @@ const productSchema = new mongoose.Schema(
       default: false,
     },
     accessories: {
+      type: Boolean,
+      default: false,
+    },
+    comboDeal: {
       type: Boolean,
       default: false,
     },

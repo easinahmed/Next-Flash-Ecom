@@ -22,7 +22,10 @@ import {
   X,
   ChevronDown,
   ShieldCheck,
-  Truck
+  Truck,
+  Gift,
+  Sun,
+  PanelsTopLeft,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -32,8 +35,10 @@ const NAV_ITEMS = [
   { label: 'Customers', href: '/customers', icon: Users },
   { label: 'Brands', href: '/brand-management', icon: Tags },
   { label: 'Categories', href: '/categories', icon: Grid },
+  { label: 'Combo Deals', href: '/combo-deals', icon: Gift },
   { label: 'Courier Integration', href: '/courier', icon: Truck },
   { label: 'CMS / Banners', href: '/cms', icon: ImageIcon },
+  { label: 'Homepage Sections', href: '/homepage-sections', icon: PanelsTopLeft },
   { label: 'Inventory', href: '/inventory', icon: Warehouse },
   { label: 'Reviews', href: '/reviews', icon: Star },
   { label: 'Settings', href: '/settings', icon: Settings },
@@ -44,6 +49,14 @@ export default function AdminLayout({ children, activeSection = 'Dashboard', sea
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const toggleTheme = () => {
+    const nextTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+    document.documentElement.classList.toggle('dark', nextTheme === 'dark');
+    document.documentElement.classList.toggle('light', nextTheme === 'light');
+    document.documentElement.style.colorScheme = nextTheme;
+    window.localStorage.setItem('theme', nextTheme);
+  };
 
   return (
     <div className="flex min-h-screen bg-[#F6F7FB] text-gray-900 dark:bg-[#0B0B14] dark:text-gray-100">
@@ -158,6 +171,16 @@ export default function AdminLayout({ children, activeSection = 'Dashboard', sea
               <span>View Storefront</span>
               <ExternalLink className="h-3.5 w-3.5" />
             </Link>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label="Toggle light and dark mode"
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-800 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+            >
+              <Sun className="h-4 w-4" />
+              <span>Toggle mode</span>
+            </button>
 
             <div className="flex items-center gap-2 border-l border-gray-200 pl-3 dark:border-gray-800">
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">

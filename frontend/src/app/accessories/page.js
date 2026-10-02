@@ -1,49 +1,50 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import Addtocardbutton from '@/components/addtocardbutton'
-import Accessoriesitems from '@/components/accessoriesitems'
 import Wishlistheart from '@/components/Wishlistheart'
 import Link from 'next/link'
 import WhatsApp from '@/components/whatsapp'
 import ProductLink from '@/components/ProductLink'
-import { fetchCategories, fetchProductsByCategory, fetchProducts } from '@/services/dummyjson'
+import { fetchCategoryByNavbarSection, fetchProducts } from '@/services/dummyjson'
 
 const AccessoriesPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [categories, setCategories] = useState([])
+  const [selectedSubcategory, setSelectedSubcategory] = useState('')
+  const [category, setCategory] = useState(null)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [categoryConfigured, setCategoryConfigured] = useState(false)
 
   useEffect(() => {
     let isMounted = true
     async function loadData() {
       setLoading(true)
       try {
-        const data = selectedCategory === 'all'
-          ? await fetchProducts({ limit: 30, accessories: true })
-          : await fetchProductsByCategory(selectedCategory, { limit: 30 })
+        const accessoryCategory = await fetchCategoryByNavbarSection('accessories', 'Accessories')
+        if (!isMounted) return
+        setCategory(accessoryCategory)
+        setCategoryConfigured(Boolean(accessoryCategory))
+        if (!accessoryCategory) {
+          setProducts([])
+          return
+        }
+        const data = await fetchProducts({
+          category: accessoryCategory.slug || accessoryCategory.name,
+          subcategory: selectedSubcategory,
+          limit: 100,
+        })
         if (isMounted) {
           setProducts(data.products || [])
         }
       } catch (err) {
         console.error('Failed to load accessories:', err)
+        if (isMounted) setProducts([])
       } finally {
         if (isMounted) setLoading(false)
       }
     }
     loadData()
     return () => { isMounted = false }
-  }, [selectedCategory])
-
-  useEffect(() => {
-    let isMounted = true
-    Promise.all([fetchCategories(), fetchProducts({ limit: 100, accessories: true })]).then(([categoryData, accessoryData]) => {
-      if (!isMounted) return
-      const accessoryCategories = new Set((accessoryData.products || []).map((product) => product.category?.toLowerCase()))
-      setCategories((categoryData || []).filter((category) => accessoryCategories.has(category.name?.toLowerCase())))
-    }).catch((err) => console.error('Failed to load accessory categories:', err))
-    return () => { isMounted = false }
-  }, [])
+  }, [selectedSubcategory])
 
   return (
     <div className="container mx-auto px-4 py-4">
@@ -53,14 +54,26 @@ const AccessoriesPage = () => {
         <p className="text-sm text-green-700 font-medium">Accessories</p>
       </div>
 
-      <div>
-        <Accessoriesitems selectedCategory={selectedCategory} categories={categories} onCategoryChange={setSelectedCategory} />
-      </div>
-
       <div className="pt-8">
+        {category?.subcategories?.length > 0 && (
+          <div className="mb-5 max-w-xs">
+            <label htmlFor="accessory-subcategory" className="mb-1 block text-sm font-medium">Filter by subcategory</label>
+            <select
+              id="accessory-subcategory"
+              value={selectedSubcategory}
+              onChange={(event) => setSelectedSubcategory(event.target.value)}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:bg-gray-800"
+            >
+              <option value="">All subcategories</option>
+              {category.subcategories.map((subcategory) => (
+                <option key={subcategory} value={subcategory}>{subcategory}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex items-center">
           <div className="h-[20px] w-[20px] bg-red-700 mb-4 rounded-3xl" />
-          <h2 className="text-lg lg:text-2xl font-bold mb-4 ml-2">{selectedCategory === 'all' ? 'All Accessories' : categories.find((category) => (category.slug || category.name) === selectedCategory)?.name || 'Accessories'}</h2>
+          <h2 className="text-lg lg:text-2xl font-bold mb-4 ml-2">{category?.name || 'Accessories'}</h2>
         </div>
 
         {loading ? (
@@ -69,6 +82,8 @@ const AccessoriesPage = () => {
               <div key={n} className="h-64 rounded-3xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
             ))}
           </div>
+        ) : !categoryConfigured ? (
+          <p className="text-center text-gray-500 py-12">Assign a category to the Accessories navbar section in Admin → Categories to show its products here.</p>
         ) : products.length === 0 ? (
           <p className="text-center text-gray-500 py-12">No products available in this category.</p>
         ) : (

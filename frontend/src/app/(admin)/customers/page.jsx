@@ -74,10 +74,12 @@ export default function CustomersPage() {
   }, []);
 
   const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const queryDigits = query.replace(/\D/g, "");
     return customers.filter((c) => {
-      const matchesSearch =
-        c.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        c.email.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = [c.fullName, c.email]
+        .some((value) => String(value || "").toLowerCase().includes(query))
+        || (queryDigits.length > 0 && String(c.phone || "").replace(/\D/g, "").includes(queryDigits));
       const matchesStatus = statusFilter === "All" || c.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -103,7 +105,7 @@ export default function CustomersPage() {
     { label: "Blocked", value: String(blockedCount), accent: "#6b7280", icon: UserX },
   ];
   return (
-    <AdminLayout activeSection="Customers" searchPlaceholder="Search customers by name or email…">
+    <AdminLayout activeSection="Customers" searchPlaceholder="Search customers by name, email, or phone…">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -147,7 +149,7 @@ export default function CustomersPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search by name or email"
+              placeholder="Search by name, email, or phone"
               className="bg-transparent text-sm text-[#1b1d24] placeholder-[#9ca3af] outline-none flex-1"
             />
           </div>

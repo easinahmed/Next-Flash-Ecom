@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 const CartContext = createContext(null)
 const STORAGE_KEY = 'flash-shoe-cart'
+const BUY_NOW_STORAGE_KEY = 'flash-shoe-buy-now'
 
 function normalizeItem(item) {
   return {
@@ -33,6 +34,7 @@ function readStoredCart() {
 export function CartProvider({ children }) {
   const [stoppingItems, setStoppingItems] = useState([])
   const [cartItems, setCartItems] = useState([])
+  const [buyNowItems, setBuyNowItems] = useState([])
   const [wishlistItems, setWishlistItems] = useState([])
   const [isLoaded, setIsLoaded] = useState(false)
 
@@ -41,6 +43,13 @@ export function CartProvider({ children }) {
     setStoppingItems(storedCart.stoppingItems)
     setCartItems(storedCart.cartItems)
     setWishlistItems(storedCart.wishlistItems)
+    try {
+      const storedBuyNowItems = JSON.parse(window.sessionStorage.getItem(BUY_NOW_STORAGE_KEY) || '[]')
+      setBuyNowItems(Array.isArray(storedBuyNowItems) ? storedBuyNowItems.map(normalizeItem) : [])
+    } catch (error) {
+      console.error('Failed to restore Buy Now checkout:', error)
+      setBuyNowItems([])
+    }
     setIsLoaded(true)
   }, [])
 
@@ -48,6 +57,31 @@ export function CartProvider({ children }) {
     if (!isLoaded) return
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ stoppingItems, cartItems, wishlistItems }))
   }, [stoppingItems, cartItems, wishlistItems, isLoaded])
+
+  useEffect(() => {
+    if (!isLoaded) return
+    window.sessionStorage.setItem(BUY_NOW_STORAGE_KEY, JSON.stringify(buyNowItems))
+  }, [buyNowItems, isLoaded])
+
+  const startBuyNowCheckout = (product) => {
+    const normalized = normalizeItem(product)
+    setBuyNowItems([{ ...normalized, qty: product.qty || 1 }])
+  }
+
+  const updateBuyNowQuantity = (id, direction) => {
+    setBuyNowItems((items) => items.map((item) => String(item.id) !== String(id)
+      ? item
+      : { ...item, qty: Math.max(1, item.qty + (direction === 'inc' ? 1 : -1)) }))
+  }
+
+  const removeBuyNowItem = (id) => {
+    setBuyNowItems((items) => items.filter((item) => String(item.id) !== String(id)))
+  }
+
+  const clearBuyNowItems = () => {
+    setBuyNowItems([])
+    if (typeof window !== 'undefined') window.sessionStorage.removeItem(BUY_NOW_STORAGE_KEY)
+  }
 
   const addToStoppingCart = (product) => {
     const norm = normalizeItem(product)
@@ -139,7 +173,12 @@ export function CartProvider({ children }) {
   const value = useMemo(() => ({
     stoppingItems,
     cartItems,
+    buyNowItems,
     addToStoppingCart,
+    startBuyNowCheckout,
+    updateBuyNowQuantity,
+    removeBuyNowItem,
+    clearBuyNowItems,
     updateStoppingQuantity,
     removeStoppingItem,
     checkoutStoppingItems,
@@ -155,7 +194,7 @@ export function CartProvider({ children }) {
     stoppingCount: stoppingItems.reduce((sum, item) => sum + item.qty, 0),
     cartCount: cartItems.reduce((sum, item) => sum + item.qty, 0),
     wishlistCount: wishlistItems.length,
-  }), [stoppingItems, cartItems, wishlistItems])
+  }), [stoppingItems, cartItems, buyNowItems, wishlistItems])
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

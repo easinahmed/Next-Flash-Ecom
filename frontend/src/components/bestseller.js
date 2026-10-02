@@ -6,7 +6,7 @@ import Addtocardbutton from './addtocardbutton'
 import Wishlistheart from './Wishlistheart'
 import Link from 'next/link'
 import ProductLink from './ProductLink'
-import { fetchProducts } from '@/services/dummyjson'
+import { fetchHomepageSectionProducts, fetchProducts } from '@/services/dummyjson'
 
 const BestSeller = () => {
   const [items, setItems] = useState([])
@@ -15,8 +15,13 @@ const BestSeller = () => {
   useEffect(() => {
     async function loadBestSellers() {
       try {
-        const data = await fetchProducts({ limit: 10, bestSeller: true })
-        setItems(data.products || [])
+        const configuredProducts = await fetchHomepageSectionProducts('best-seller')
+        if (configuredProducts) {
+          setItems(configuredProducts)
+        } else {
+          const data = await fetchProducts({ limit: 10, bestSeller: true })
+          setItems(data.products || [])
+        }
       } catch (err) {
         console.error('Failed to load best sellers:', err)
       } finally {
@@ -53,7 +58,8 @@ const BestSeller = () => {
         <p className="text-center text-gray-500 py-8">No best seller products available.</p>
       ) : (
         <Splide options={{
-          type: 'loop',
+          type: 'slide',
+          rewind: true,
           perPage: 4,
           perMove: 1,
           gap: '1rem',

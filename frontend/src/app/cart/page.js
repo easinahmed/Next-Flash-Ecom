@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Cashon from "@/images/cashondelivery.svg"
 import Card from "@/images/cardpayment.svg"
@@ -790,14 +790,21 @@ const DEFAULT_ADDRESS_FORM = {
   notes: '',
 };
 
-export default function page() {
+function CartPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isBuyNowCheckout = searchParams.get('buyNow') === 'true';
   const {
     cartItems: items,
+    buyNowItems,
     updateCartQuantity,
+    updateBuyNowQuantity,
     removeCartItem,
+    removeBuyNowItem,
     clearCart,
+    clearBuyNowItems,
   } = useCart();
+  const checkoutItems = isBuyNowCheckout ? buyNowItems : items;
   const [form, setForm] = useState(DEFAULT_ADDRESS_FORM);
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [couponOpen, setCouponOpen] = useState(false);
@@ -807,16 +814,18 @@ export default function page() {
   const [submitting, setSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
-  const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.price * item.qty, 0), [items]);
+  const subtotal = useMemo(() => checkoutItems.reduce((sum, item) => sum + item.price * item.qty, 0), [checkoutItems]);
   const deliveryCost = form.district === 'Dhaka' ? DHAKA_DELIVERY_COST : OUTSIDE_DHAKA_DELIVERY_COST;
   const total = Math.max(0, subtotal + deliveryCost - discount);
 
   const handleQty = (id, direction) => {
-    updateCartQuantity(id, direction);
+    if (isBuyNowCheckout) updateBuyNowQuantity(id, direction);
+    else updateCartQuantity(id, direction);
   };
 
   const handleRemove = (id) => {
-    removeCartItem(id);
+    if (isBuyNowCheckout) removeBuyNowItem(id);
+    else removeCartItem(id);
     toast.success('Item removed from cart');
   };
 
@@ -867,7 +876,7 @@ export default function page() {
   };
 
   const handlePlaceOrder = async () => {
-    if (items.length === 0) {
+    if (checkoutItems.length === 0) {
       toast.error('Your cart is empty');
       return;
     }
@@ -897,7 +906,7 @@ export default function page() {
 
     const orderPayload = {
       orderId: `ORD-${Date.now()}`,
-      items: items.map((item) => ({
+      items: checkoutItems.map((item) => ({
         productId: item.id,
         id: item.id,
         name: item.name,
@@ -938,9 +947,9 @@ export default function page() {
         ...orderPayload,
         orderId: created.orderId || orderPayload.orderId,
         _id: created._id,
-        productImage: items[0]?.image || '/shoe1.avif',
-        productName: items[0]?.name || 'Order',
-        quantity: items.reduce((sum, item) => sum + item.qty, 0),
+        productImage: checkoutItems[0]?.image || '/shoe1.avif',
+        productName: checkoutItems[0]?.name || 'Order',
+        quantity: checkoutItems.reduce((sum, item) => sum + item.qty, 0),
         paymentMethod,
         total: created.total ?? total,
         deliveryCost: created.deliveryFee ?? deliveryCost,
@@ -948,7 +957,8 @@ export default function page() {
       };
 
       sessionStorage.setItem('flashShoeOrder', JSON.stringify(sessionOrder));
-      clearCart();
+      if (isBuyNowCheckout) clearBuyNowItems();
+      else clearCart();
       router.push('/orderdetails');
     } catch (err) {
       toast.error(err.message || 'Failed to place order. Please try again.');
@@ -965,7 +975,7 @@ export default function page() {
           <section className="rounded-xl bg-gray-200 dark:bg-gray-800 p-6 shadow-sm">
             <SectionTitle> <span className=' text-black dark:text-white '>Order review</span></SectionTitle>
             <div className="mt-4 divide-y divide-gray-100">
-              {items.map((item) => (
+              {checkoutItems.map((item) => (
                 <div key={item.id} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
                   <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-white dark:bg-gray-700">
                     <Image src={item.image} alt={item.name} fill sizes="64px" className="object-contain" />
@@ -1017,13 +1027,13 @@ export default function page() {
                   </button>
                 </div>
               ))}
-              {items.length === 0 && (
+              {checkoutItems.length === 0 && (
                 <p className="py-6 text-center text-sm text-gray-500">Your cart is empty.</p>
               )}
             </div>
           </section>
 
-          {items.length > 0 && (
+          {checkoutItems.length > 0 && (
             <>
           {/* Shipping address */}
           <section className="rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm">
@@ -1046,7 +1056,7 @@ export default function page() {
         </div>
 
         {/* ================= RIGHT COLUMN ================= */}
-        {items.length > 0 && (
+        {checkoutItems.length > 0 && (
         <div className="space-y-6">
           {/* Payment method */}
           <section className="rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm">
@@ -1192,7 +1202,7 @@ export default function page() {
           <button
             type="button"
             onClick={handlePlaceOrder}
-            disabled={submitting || items.length === 0}
+            disabled={submitting || checkoutItems.length === 0}
             className="w-full rounded-md bg-orange-500 py-3.5 text-sm font-bold tracking-wide text-white transition hover:bg-orange-600 disabled:opacity-60 cursor-pointer"
           >
             {submitting ? 'PLACING ORDER…' : 'PLACE ORDER'}
@@ -1489,5 +1499,13 @@ function NagadIcon() {
     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white">
       <Image src={Nagad} alt='img'/>
     </span>
+  );
+}
+
+export default function CartPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-white dark:bg-black" />}>
+      <CartPageContent />
+    </Suspense>
   );
 }

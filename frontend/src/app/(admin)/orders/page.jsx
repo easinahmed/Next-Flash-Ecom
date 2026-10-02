@@ -4,16 +4,43 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AdminLayout from '@/components/AdminLayout';
 import { getOrders, updateOrder, updateOrderStatus } from '@/lib/api';
-import { ShoppingBag, Search, Truck, RefreshCw, X, Save, UserRound, MapPin, Phone, Mail, Package } from 'lucide-react';
+import { ShoppingBag, Search, Truck, RefreshCw, X, Save, UserRound, MapPin, Phone, Mail, Package, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const STATUS_OPTIONS = ['Processing', 'Shipped', 'Delivered', 'Cancelled'];
+
+function getLocalDateKey(dateValue) {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return 'unknown-date';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getDateGroupLabel(dateKey, todayKey) {
+  if (dateKey === 'unknown-date') return 'Date unavailable';
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const formattedDate = date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+  if (dateKey === todayKey) return `Today · ${formattedDate}`;
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return dateKey === getLocalDateKey(yesterday)
+    ? `Yesterday · ${formattedDate}`
+    : formattedDate;
+}
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedDateKeys, setExpandedDateKeys] = useState(() => new Set([getLocalDateKey(new Date())]));
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [deliveryFee, setDeliveryFee] = useState('');
   const [savingFee, setSavingFee] = useState(false);
@@ -85,11 +112,30 @@ export default function AdminOrdersPage() {
   };
 
   const filteredOrders = orders.filter((o) => {
-    const q = searchQuery.toLowerCase();
-    const id = (o.orderId || o._id || o.orderNumber || '').toLowerCase();
-    const customer = (o.customerName || o.customer?.fullName || o.customer?.email || o.phone || '').toLowerCase();
-    return id.includes(q) || customer.includes(q);
+    const q = searchQuery.trim().toLowerCase();
+    const id = String(o.orderId || o._id || o.orderNumber || '').toLowerCase();
+    const customer = String(o.customerName || o.customer?.fullName || o.customer?.email || '').toLowerCase();
+    const phone = String(o.phone || o.customer?.phone || o.shippingAddress?.phone || '');
+    const phoneDigits = phone.replace(/\D/g, '');
+    const queryDigits = q.replace(/\D/g, '');
+    return id.includes(q) || customer.includes(q) || (queryDigits.length > 0 && phoneDigits.includes(queryDigits));
   });
+  const todayKey = getLocalDateKey(new Date());
+  const ordersByDate = filteredOrders.reduce((groups, order) => {
+    const dateKey = getLocalDateKey(order.createdAt);
+    if (!groups.has(dateKey)) groups.set(dateKey, []);
+    groups.get(dateKey).push(order);
+    return groups;
+  }, new Map());
+  const dateGroups = [...ordersByDate.entries()].sort(([dateA], [dateB]) => dateB.localeCompare(dateA));
+  const toggleDateGroup = (dateKey) => {
+    setExpandedDateKeys((current) => {
+      const next = new Set(current);
+      if (next.has(dateKey)) next.delete(dateKey);
+      else next.add(dateKey);
+      return next;
+    });
+  };
 
   return (
     <AdminLayout activeSection="Orders">
@@ -123,7 +169,7 @@ export default function AdminOrdersPage() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by Order ID or customer name..."
+            placeholder="Search by Order ID, customer name, or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 dark:border-gray-800 dark:bg-[#161623] dark:text-white"
@@ -141,8 +187,28 @@ export default function AdminOrdersPage() {
               <p className="font-semibold text-gray-700 dark:text-gray-300">No orders found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
+            <div className="space-y-4 p-4">
+              {dateGroups.map(([dateKey, dayOrders]) => {
+                const isExpanded = expandedDateKeys.has(dateKey);
+                return (
+                  <section key={dateKey} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                    <button
+                      type="button"
+                      onClick={() => toggleDateGroup(dateKey)}
+                      aria-expanded={isExpanded}
+                      className="flex w-full items-center justify-between gap-3 bg-gray-50 px-5 py-4 text-left hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10"
+                    >
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {getDateGroupLabel(dateKey, todayKey)}
+                        <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                          ({dayOrders.length} {dayOrders.length === 1 ? 'order' : 'orders'})
+                        </span>
+                      </span>
+                      <ChevronDown className={`h-5 w-5 shrink-0 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isExpanded && (
+                      <div className="overflow-x-auto border-t border-gray-200 dark:border-gray-700">
+                        <table className="w-full text-sm text-left">
                 <thead>
                   <tr className="text-gray-400 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/5">
                     <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider">Order ID</th>
@@ -153,7 +219,7 @@ export default function AdminOrdersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {filteredOrders.map((o) => {
+                  {dayOrders.map((o) => {
                     const mongoId = o._id;
                     const displayId = o.orderId || o.orderNumber || mongoId;
                     const customerName = o.customerName || o.customer?.fullName || o.customer?.email || 'Guest Customer';
@@ -218,6 +284,11 @@ export default function AdminOrdersPage() {
                   })}
                 </tbody>
               </table>
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
             </div>
           )}
         </div>

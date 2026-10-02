@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useRef, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { Star } from 'lucide-react';
@@ -101,7 +101,7 @@ const initialReviews = [
 ];
 
 const TABS = [
-  { id: 'description', label: 'Description' },
+  { id: 'description', label: 'Full Description' },
   { id: 'reviews', label: 'Customer Reviews' },
   { id: 'submit', label: 'Submit Your Review' },
 ];
@@ -247,8 +247,9 @@ function ProductGallery({ images = [], productName = 'Product' }) {
 /*  Product info / purchase panel                                     */
 /* ------------------------------------------------------------------ */
 
-function ProductInfo({ product }) {
-  const { addToStoppingCart } = useCart();
+function ProductInfo({ product, language, onLanguageChange }) {
+  const router = useRouter();
+  const { addToStoppingCart, startBuyNowCheckout } = useCart();
   const [quantity, setQuantity] = useState(1);
   const sizes = Array.isArray(product.sizes) ? product.sizes : [];
   const colors = Array.isArray(product.colors) ? product.colors : [];
@@ -273,7 +274,16 @@ function ProductInfo({ product }) {
   };
 
   const handleBuyNow = () => {
-    toast('Redirecting to checkout...');
+    startBuyNowCheckout({
+      id: product.id || product._id || product.name,
+      name: product.name,
+      image: product.images?.[0] || '/shoe1.avif',
+      price: product.price,
+      qty: quantity,
+      color: selectedColor,
+      size: selectedSize,
+    });
+    router.push('/cart?buyNow=true');
   };
 
   const handleWhatsApp = () => {
@@ -298,7 +308,18 @@ function ProductInfo({ product }) {
               )}
             </div>
 
-      {product.description && <p className="mt-4 text-sm leading-relaxed text-gray-600 dark:text-amber-50 ">{product.description}</p>}
+      <div className="mt-2">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Product Description</h2>
+          <select value={language} onChange={(event) => onLanguageChange(event.target.value)} aria-label="Select product description language" className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200">
+            <option value="english">English</option>
+            <option value="bengali">বাংলা</option>
+          </select>
+        </div>
+        <p className="text-sm leading-relaxed text-gray-600 dark:text-amber-50">
+          {(language === 'bengali' ? product.descriptionBengali : product.descriptionEnglish || product.description) || 'No description available in this language.'}
+        </p>
+      </div>
 
  {/* Size selector */}
             {sizes.length > 0 && <div className="mt-6">
@@ -434,61 +455,71 @@ function ProductInfo({ product }) {
 /*  Description tab                                                    */
 /* ------------------------------------------------------------------ */
 
-function DescriptionTab({ description }) {
-  const [language, setLanguage] = useState('english');
+function DescriptionTab({ description, language, onLanguageChange }) {
   if (!description) return null;
 
-  const isBengali = language === 'bengali' && Boolean(description.bn);
-  const content = isBengali ? description.bn : description;
+  const isBengali = language === 'bengali';
+  const isLocalizedDescription = Object.prototype.hasOwnProperty.call(description, 'en');
+  const content = isLocalizedDescription
+    ? (isBengali ? description.bn : description.en)
+    : (isBengali && description.bn ? description.bn : description);
+  const paragraphs = typeof content === 'string' ? [content] : content?.paragraphs || [];
+  const benefits = typeof content === 'object' ? content.benefits || [] : [];
+  const storage = typeof content === 'object' ? content.storage : '';
 
   return (
     <div className="bg-white dark:bg-gray-700 rounded-xl border border-gray-200 p-6">
       <div className=" text-lg font-semibold text-gray-900 dark:text-amber-200 relative inline-block pb-2 mb-4">
         <div className=' flex items-center justify-between gap-10' >
           <div>
-        Product Details
+        {isLocalizedDescription ? 'Full Description' : 'Product Details'}
         <span className="absolute left-0 bottom-0 h-0.5 w-10 bg-orange-500" />
         </div>
         <div  >
            <select
              value={language}
-             onChange={(event) => setLanguage(event.target.value)}
+             onChange={(event) => onLanguageChange(event.target.value)}
              aria-label="Select description language"
              className="self-end bg-gray-500 dark:bg-gray-500 text-amber-50 text-xs shrink-0 rounded-md cursor-pointer outline-none mb-1 "
            >
               <option className="bg-white dark:bg-black text-black dark:text-amber-50 cursor-pointer" value="english">
-                EN
+                English
               </option>
-              {description.bn && <option className="bg-white dark:bg-black text-black dark:text-amber-50 cursor-pointer" value="bengali">BN</option>}
+              <option className="bg-white dark:bg-black text-black dark:text-amber-50 cursor-pointer" value="bengali">বাংলা</option>
             </select>
         </div>
         </div>
         
       </div>
 
-      {content.paragraphs?.map((p, idx) => (
+      {paragraphs.map((p, idx) => (
         <p key={idx} className="text-gray-600 dark:text-amber-50 leading-relaxed mb-3">
           {p}
         </p>
       ))}
 
-      {description.benefits?.length > 0 && (
+      {benefits.length > 0 && (
         <div className="mt-4">
           <h4 className="font-semibold text-gray-900 dark:text-amber-200 mb-2">
             {isBengali ? 'পুষ্টি ও স্বাস্থ্য উপকারিতা:' : 'Nutritional & Health Benefits:'}
           </h4>
           <ul className="space-y-1 text-gray-600 dark:text-amber-50 ">
-            {content.benefits.map((b, idx) => (
+            {benefits.map((b, idx) => (
               <li key={idx}>{b}</li>
             ))}
           </ul>
         </div>
       )}
 
-      {content.storage && (
+      {storage && (
         <p className="mt-5  ">
           <span className="font-semibold text-gray-900 dark:text-amber-200">{isBengali ? 'সংরক্ষণ:' : 'Storage:'}</span>{' '}
-          <span className='text-gray-900 dark:text-amber-50'>{content.storage}</span> 
+          <span className='text-gray-900 dark:text-amber-50'>{storage}</span>
+        </p>
+      )}
+      {paragraphs.length === 0 && benefits.length === 0 && !storage && (
+        <p className="text-sm text-gray-600 dark:text-amber-50">
+          {isBengali ? 'এই ভাষায় বিস্তারিত বিবরণ যোগ করা হয়নি।' : 'No full description is available in this language.'}
         </p>
       )}
     </div>
@@ -785,7 +816,7 @@ function SubmitReviewTab({ onSubmit }) {
 /*  Tabs container                                                     */
 /* ------------------------------------------------------------------ */
 
-function ProductTabs({ description, reviewStats, initialReviews, productId }) {
+function ProductTabs({ description, language, onLanguageChange, reviewStats, initialReviews, productId }) {
   const [activeTab, setActiveTab] = useState('description');
   const [reviews, setReviews] = useState(initialReviews);
   const [stats, setStats] = useState(reviewStats);
@@ -834,7 +865,7 @@ function ProductTabs({ description, reviewStats, initialReviews, productId }) {
       </div>
 
       <div className="mt-4">
-        {activeTab === 'description' && <DescriptionTab description={description} />}
+        {activeTab === 'description' && <DescriptionTab description={description} language={language} onLanguageChange={onLanguageChange} />}
         {activeTab === 'reviews' && <ReviewsTab stats={stats} reviews={reviews} />}
         {activeTab === 'submit' && <SubmitReviewTab onSubmit={handleNewReview} />}
       </div>
@@ -850,6 +881,7 @@ function ProductPageContent() {
   const [product, setProduct] = useState(null);
   const [productReviews, setProductReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [descriptionLanguage, setDescriptionLanguage] = useState('english');
 
   useEffect(() => {
     let isMounted = true;
@@ -902,11 +934,15 @@ function ProductPageContent() {
     );
   }
 
-  const customDescription = typeof product.description === 'string'
+  const hasProductDescriptions = Boolean(
+    product.descriptionEnglish || product.descriptionBengali
+    || product.fullDescriptionEnglish || product.fullDescriptionBengali
+    || typeof product.description === 'string'
+  );
+  const customDescription = hasProductDescriptions
     ? {
-        paragraphs: [product.description],
-        benefits: [],
-        storage: '',
+        en: product.fullDescriptionEnglish || product.descriptionEnglish || product.description || '',
+        bn: product.fullDescriptionBengali || '',
       }
     : description;
 
@@ -926,12 +962,14 @@ function ProductPageContent() {
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 p-4 sm:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             <ProductGallery images={product.images || [product.image]} productName={product.name} />
-            <ProductInfo key={product.id} product={product} />
+            <ProductInfo key={product.id} product={product} language={descriptionLanguage} onLanguageChange={setDescriptionLanguage} />
           </div>
         </div>
 
         <ProductTabs
           description={customDescription}
+          language={descriptionLanguage}
+          onLanguageChange={setDescriptionLanguage}
           reviewStats={{ ...initialReviewStats, totalReviews: formattedReviews.length, averageRating: product.rating || 4.5 }}
           initialReviews={formattedReviews}
           productId={product.id}
@@ -939,7 +977,7 @@ function ProductPageContent() {
       </div>
 
       <div>
-        <Saggation category={product.category} />
+        <Saggation category={product.category} excludeProductId={product.id || product._id} />
       </div>
     </main>
   );

@@ -1,128 +1,139 @@
 "use client"
+
 import React, { useEffect, useState } from 'react'
-import Image from 'next/image'
-import discountedProductImage from '../../../public/discountproduct.webp'
-import { Splide, SplideSlide } from '@splidejs/react-splide'
-import { MoveRight } from 'lucide-react'
+import Link from 'next/link'
 import Addtocardbutton from '@/components/addtocardbutton'
 import Wishlistheart from '@/components/Wishlistheart'
-import Link from 'next/link'
 import WhatsApp from '@/components/whatsapp'
 import ProductLink from '@/components/ProductLink'
-import { fetchProductsByCategory } from '@/services/dummyjson'
+import { fetchCategoryByNavbarSection, fetchProducts } from '@/services/dummyjson'
+
+const genderOptions = [
+  { value: '', label: 'See All' },
+  { value: 'men', label: 'Men' },
+  { value: 'women', label: 'Women' },
+  { value: 'kids', label: 'Kids' },
+]
 
 export default function SneakerStudioPage() {
-  const [menSneakers, setMenSneakers] = useState([])
-  const [womenSneakers, setWomenSneakers] = useState([])
-  const [kidsSneakers, setKidsSneakers] = useState([])
+  const [category, setCategory] = useState(null)
+  const [selectedGender, setSelectedGender] = useState('')
+  const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [categoryLoaded, setCategoryLoaded] = useState(false)
 
   useEffect(() => {
-    async function loadSneakerStudioData() {
-      try {
-        const [menData, womenData] = await Promise.all([
-          fetchProductsByCategory('mens-shoes', { limit: 10 }),
-          fetchProductsByCategory('womens-shoes', { limit: 10 }),
-        ])
-        setMenSneakers(menData.products || [])
-        setWomenSneakers(womenData.products || [])
-        setKidsSneakers((womenData.products || []).slice(0, 6))
-      } catch (err) {
-        console.error('Failed to load sneaker studio data:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadSneakerStudioData()
+    let isMounted = true
+    fetchCategoryByNavbarSection('sneakerstudio', 'Sneakers')
+      .then((data) => {
+        if (isMounted) setCategory(data)
+      })
+      .catch((error) => console.error('Failed to load Sneaker Studio category:', error))
+      .finally(() => {
+        if (isMounted) setCategoryLoaded(true)
+      })
+    return () => { isMounted = false }
   }, [])
 
-  const renderSneakerSlider = (title, href, products) => (
-    <div className="mt-10">
-      <div className="flex items-center justify-between">
-        <div className="container flex items-center">
-          <div className="h-[27px] w-[13px] bg-red-700 mb-4 rounded-3xl" />
-          <h2 className="text-2xl font-bold mb-4 ml-2">{title}</h2>
-        </div>
+  useEffect(() => {
+    if (!category) {
+      setProducts([])
+      setLoading(false)
+      return
+    }
 
-        <div className="flex items-center justify-center gap-1 cursor-pointer mb-4">
-          <Link href={href} className="flex items-center gap-1 text-nowrap text-sm border-b-1 lg:text-xl font-medium">
-            See All <MoveRight size={18} />
-          </Link>
+    let isMounted = true
+    setLoading(true)
+    fetchProducts({
+      category: category.slug || category.name,
+      gender: selectedGender,
+      limit: 100,
+    })
+      .then((data) => {
+        if (isMounted) setProducts(data.products || [])
+      })
+      .catch((error) => {
+        console.error('Failed to load Sneaker Studio products:', error)
+        if (isMounted) setProducts([])
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
+    return () => { isMounted = false }
+  }, [category, selectedGender])
+
+  return (
+    <main className="container mx-auto min-h-screen px-4 py-6">
+      <div className="mb-5 flex items-center gap-2">
+        <Link href="/" className="text-sm hover:underline">Home</Link>
+        <span className="text-sm">/</span>
+        <span className="text-sm font-medium text-green-700">Sneaker Studio</span>
+      </div>
+
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <h1 className="text-2xl font-bold lg:text-3xl">Sneaker Studio</h1>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Shop sneakers for men, women, and kids.</p>
+        </div>
+        <div className="w-full sm:max-w-xs">
+          <label htmlFor="sneaker-gender" className="mb-1 block text-sm font-medium">Select collection</label>
+          <select
+            id="sneaker-gender"
+            value={selectedGender}
+            onChange={(event) => setSelectedGender(event.target.value)}
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:bg-gray-800"
+          >
+            {genderOptions.map((option) => (
+              <option key={option.value || 'all'} value={option.value}>{option.label}</option>
+            ))}
+          </select>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-8">
-          {[1, 2, 3, 4].map((n) => (
-            <div key={n} className="h-64 rounded-3xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+            <div key={item} className="h-64 animate-pulse rounded-3xl bg-gray-200 dark:bg-gray-800" />
           ))}
         </div>
+      ) : !categoryLoaded || !category ? (
+        <p className="py-12 text-center text-gray-500">
+          Assign a category to the Sneaker Studio navbar section in Admin → Categories to show sneakers here.
+        </p>
+      ) : products.length === 0 ? (
+        <p className="py-12 text-center text-gray-500">
+          {selectedGender ? `No ${selectedGender} sneakers available.` : 'No sneakers available.'}
+        </p>
       ) : (
-        <Splide options={{
-          type: 'loop',
-          perPage: 5,
-          perMove: 1,
-          gap: '1rem',
-          breakpoints: {
-            640: { perPage: 2 },
-            1024: { perPage: 3 },
-          },
-        }}>
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {products.map((item) => (
-            <SplideSlide className="cursor-pointer border-1 rounded-3xl border-gray-400/20 min-h-fit shadow-2xs overflow-hidden" key={item.id}>
-              <div className="relative rounded-3xl flex flex-col justify-between h-full bg-white dark:bg-gray-800">
-                <ProductLink item={item}>
-                  <img className="w-full h-48 sm:h-56 object-cover rounded-t-3xl" src={item.image} alt={item.name} />
-                </ProductLink>
-                {item.discountPercentage > 0 && (
-                  <span className="absolute top-3 left-3 text-white text-[10px] font-poppins px-3 py-1 font-bold border-1 bg-red-700 rounded-3xl">
-                    -{item.discountPercentage}%
-                  </span>
-                )}
-                <Wishlistheart item={item} />
-                <Addtocardbutton item={item} />
-                <ProductLink item={item}>
-                  <div className="text-start pl-5 border-t-[1px] border-gray-400/30 py-3">
-                    <h3 className="text-base sm:text-lg font-bold truncate pr-3">{item.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-red-500 font-semibold">TK.{item.price}</p>
-                      {item.oldPrice > item.price && (
-                        <p className="text-gray-500 text-[13px] lg:text-sm line-through">TK.{item.oldPrice}</p>
-                      )}
-                    </div>
+            <article key={item.id} className="relative overflow-hidden rounded-3xl border border-gray-400/20 bg-white shadow-sm dark:bg-gray-800">
+              <ProductLink item={item}>
+                <img className="h-48 w-full rounded-t-3xl object-cover sm:h-56" src={item.image} alt={item.name} />
+              </ProductLink>
+              {item.discountPercentage > 0 && (
+                <span className="absolute left-3 top-3 rounded-3xl border bg-red-700 px-3 py-1 text-[10px] font-bold text-white">
+                  -{item.discountPercentage}%
+                </span>
+              )}
+              <Wishlistheart item={item} />
+              <Addtocardbutton item={item} />
+              <ProductLink item={item}>
+                <div className="border-t border-gray-400/30 px-5 py-3">
+                  <h2 className="truncate text-base font-bold">{item.name}</h2>
+                  <div className="mt-1 flex items-center gap-2">
+                    <p className="font-semibold text-red-500">TK.{item.price}</p>
+                    {item.oldPrice > item.price && (
+                      <p className="text-sm text-gray-500 line-through">TK.{item.oldPrice}</p>
+                    )}
                   </div>
-                </ProductLink>
-              </div>
-            </SplideSlide>
+                </div>
+              </ProductLink>
+            </article>
           ))}
-        </Splide>
-      )}
-    </div>
-  )
-
-  return (
-    <div className="min-h-screen">
-      <Image src={discountedProductImage} alt="Discounted Product" width={1920} height={1080} className="bg-cover overflow-hidden w-full h-auto" />
-      <div className="container mx-auto px-4">
-        <div className="inset-0 flex flex-col items-center justify-center bg-opacity-50">
-          <div className="relative grid items-center justify-center gap-3">
-            <h3 className="text-center font-extrabold leading-5 text-transparent text-2xl lg:text-5xl text-nowrap [-webkit-text-stroke:1px_#0D542B] bg-clip-text bg-red-500 mt-6">
-              FLASH SHOE
-            </h3>
-            <h3 className="text-2xl lg:text-5xl text-gray-800 dark:text-white text-center mt-0 lg:mt-5 font-bold leading-5 text-balance lg:text-nowrap bg-clip-text bg-red-500">
-              Your one-stop destination for all your sneaker needs
-            </h3>
-          </div>
-          <p className="text-center text-sm lg:text-lg text-gray-800 dark:text-gray-200 mt-2 lg:mt-6 max-w-full lg:max-w-180 pt-3">
-            Every occasion deserves a different look. A stylish one for a movie date, a powerful one for a morning run and a casual one for a meetup with friends. Sneaker Studio at Flash is where you can ace them all.
-          </p>
         </div>
-
-        {renderSneakerSlider('Man Sneakers', '/mansneakers', menSneakers)}
-        {renderSneakerSlider('Woman Sneakers', '/womansneakers', womenSneakers)}
-        {renderSneakerSlider("Kid's Sneakers", '/kidssneakers', kidsSneakers)}
-      </div>
+      )}
       <WhatsApp />
-    </div>
+    </main>
   )
 }

@@ -6,7 +6,7 @@ import Addtocardbutton from './addtocardbutton'
 import Wishlistheart from './Wishlistheart'
 import ProductLink from './ProductLink'
 import Link from 'next/link'
-import { fetchProducts, fetchProductsByCategory } from '@/services/dummyjson'
+import { fetchCategoryByNavbarSection, fetchProducts } from '@/services/dummyjson'
 
 const Accessories = () => {
   const [items, setItems] = useState([])
@@ -15,9 +15,13 @@ const Accessories = () => {
   useEffect(() => {
     async function loadAccessories() {
       try {
-        const data = await fetchProducts({ limit: 10, accessories: true })
-        const fallback = data.products?.length ? data : await fetchProductsByCategory('mobile-accessories', { limit: 10 })
-        setItems(fallback.products || [])
+        const category = await fetchCategoryByNavbarSection('accessories', 'Accessories')
+        if (!category) {
+          setItems([])
+          return
+        }
+        const data = await fetchProducts({ category: category.slug || category.name, limit: 10 })
+        setItems(data.products || [])
       } catch (err) {
         console.error('Failed to load accessories:', err)
       } finally {
@@ -52,7 +56,8 @@ const Accessories = () => {
         <p className="text-center text-gray-500 py-8">No accessories available.</p>
       ) : (
         <Splide options={{
-          type: 'loop',
+          type: 'slide',
+          rewind: true,
           perPage: 4,
           perMove: 1,
           gap: '1rem',

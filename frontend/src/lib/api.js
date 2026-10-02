@@ -78,6 +78,22 @@ export async function deleteProduct(id) {
   });
 }
 
+export async function getHomepageSections() {
+  return fetchApi('/homepage-sections');
+}
+
+export async function getHomepageSection(key) {
+  const sections = await getHomepageSections();
+  return Array.isArray(sections) ? sections.find((section) => section.key === key) || null : null;
+}
+
+export async function updateHomepageSection(key, data) {
+  return fetchApi(`/homepage-sections/${encodeURIComponent(key)}`, {
+    method: 'PUT',
+    body: data,
+  });
+}
+
 /* Brands */
 export async function getBrands() {
   try {

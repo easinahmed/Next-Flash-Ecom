@@ -16,6 +16,16 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    subcategories: {
+      type: [String],
+      default: [],
+    },
+    navbarSection: {
+      type: String,
+      enum: ['', 'accessories', 'leatherstudio', 'sneakerstudio'],
+      default: '',
+      trim: true,
+    },
     image: {
       type: String,
       default: '',
@@ -26,6 +36,11 @@ const categorySchema = new mongoose.Schema(
     }
   },
   { timestamps: true }
+);
+
+categorySchema.index(
+  { navbarSection: 1 },
+  { unique: true, partialFilterExpression: { navbarSection: { $gt: '' } } }
 );
 
 categorySchema.pre('validate', function () {

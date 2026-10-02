@@ -6,7 +6,7 @@ import Footer from '@/components/footer'
 import { useAuth } from '@/components/AuthContext'
 import CmsPageOverride from '@/components/CmsPageOverride'
 
-const ADMIN_ROUTES = ['/categories', '/brand-management', '/cms', '/courier', '/customers', '/dashboard', '/inventory', '/orders', '/products', '/reviews', '/settings']
+const ADMIN_ROUTES = ['/categories', '/brand-management', '/cms', '/combo-deals', '/courier', '/customers', '/dashboard', '/homepage-sections', '/inventory', '/orders', '/products', '/reviews', '/settings']
 
 export default function LayoutInner({ children }) {
   const { user, logout } = useAuth()
